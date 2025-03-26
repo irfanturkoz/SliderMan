@@ -239,6 +239,7 @@ router.post('/', auth, upload.fields([
         const htmlContent = createHtmlTemplate(page);
         const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
         
+        // HTML dosyasını oluştur
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 

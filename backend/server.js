@@ -65,6 +65,7 @@ app.listen(port, () => {
     console.log(`Server ${port} portunda çalışıyor`);
     if (process.env.NODE_ENV === 'production') {
         console.log('Production modunda çalışıyor');
+        console.log('HTML dosyaları:', path.join(__dirname, '..'));
     } else {
         console.log('Frontend: http://localhost:8080');
         console.log('Backend: http://localhost:' + port);
