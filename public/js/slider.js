@@ -65,6 +65,9 @@
         
         // Periyodik kontrol başlat
         setInterval(checkTimer, 5000);
+        
+        // Tüm videoları durdur ve başlangıç durumuna getir
+        stopAllVideos();
     }
     
     /**
@@ -154,9 +157,9 @@
             // Slide türüne göre işlem yap
             const video = targetSlide.querySelector('video');
             if (video) {
-                handleVideo(video);
+                handleVideoSlide(video);
             } else {
-                handleImage();
+                handleImageSlide();
             }
             
             console.log(`SliderMan: Slide #${index} geçişi tamamlandı`);
@@ -182,11 +185,11 @@
     }
     
     /**
-     * Video işle
+     * Video slide işle
      * @param {HTMLVideoElement} video - Video elementi
      */
-    function handleVideo(video) {
-        console.log('SliderMan: Video işleniyor');
+    function handleVideoSlide(video) {
+        console.log('SliderMan: Video slide işleniyor');
         
         // Videoyu sessiz yap
         video.muted = true;
@@ -222,14 +225,14 @@
     }
     
     /**
-     * Resim işle
+     * Resim slide işle
      */
-    function handleImage() {
+    function handleImageSlide() {
         console.log('SliderMan: Resim işleniyor, zamanlayıcı başlatılıyor');
         
         // Resim için zamanlayıcı başlat
         slideTimer = setTimeout(() => {
-            console.log('SliderMan: Resim süresi doldu, sonraki slide\'a geçiliyor');
+            console.log('SliderMan: Resim zamanlayıcısı tamamlandı, sonraki slide\'a geçiliyor');
             nextSlide();
         }, transitionInterval);
     }
@@ -238,25 +241,34 @@
      * Zamanlayıcı kontrolü
      */
     function checkTimer() {
-        // Geçiş sırasında veya slide başlangıç zamanı yoksa kontrol etme
-        if (isTransitioning || !slideStartTime) return;
+        // Geçiş sırasında kontrol etme
+        if (isTransitioning) {
+            return;
+        }
         
-        // Mevcut slide'ı al
-        const currentSlide = slides[currentIndex];
-        if (!currentSlide) return;
+        // Aktif slide'ı kontrol et
+        const activeSlide = slides[currentIndex];
+        if (!activeSlide) {
+            return;
+        }
         
-        // Video mu resim mi kontrol et
-        const video = currentSlide.querySelector('video');
+        // Aktif slide'ın video olup olmadığını kontrol et
+        const hasVideo = activeSlide.querySelector('video') !== null;
         
-        // Sadece resimler için zamanlayıcı kontrolü yap
-        if (!video) {
+        // Eğer resim slide'ı ise ve zamanlayıcı yoksa
+        if (!hasVideo && !slideTimer) {
+            // Geçen süreyi hesapla
             const elapsedTime = Date.now() - slideStartTime;
-            console.log(`SliderMan: Zamanlayıcı kontrolü - Geçen süre: ${elapsedTime}ms / ${transitionInterval}ms`);
             
-            // Süre dolmuşsa sonraki slide'a geç
+            // Eğer geçen süre geçiş süresinden fazlaysa, sonraki slide'a geç
             if (elapsedTime >= transitionInterval) {
-                console.log('SliderMan: Zamanlayıcı süresi doldu, sonraki slide\'a geçiliyor');
+                console.log('SliderMan: Zamanlayıcı kontrolü - Süre doldu, sonraki slide\'a geçiliyor');
                 nextSlide();
+            } else {
+                // Aksi halde yeni bir zamanlayıcı başlat
+                const remainingTime = transitionInterval - elapsedTime;
+                console.log(`SliderMan: Zamanlayıcı kontrolü - Kalan süre: ${remainingTime}ms`);
+                slideTimer = setTimeout(nextSlide, remainingTime);
             }
         }
     }
@@ -265,7 +277,6 @@
      * Sonraki slide'a geç
      */
     function nextSlide() {
-        if (slides.length <= 1) return;
         const nextIndex = (currentIndex + 1) % slides.length;
         showSlide(nextIndex);
     }
@@ -274,7 +285,6 @@
      * Önceki slide'a geç
      */
     function prevSlide() {
-        if (slides.length <= 1) return;
         const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
         showSlide(prevIndex);
     }
