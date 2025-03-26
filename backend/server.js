@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const Page = require('./models/Page');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const fs = require('fs');
 
 const app = express();
 
@@ -37,9 +38,17 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/pages', require('./routes/pages'));
 
-// Ana dizindeki HTML dosyalarını serve et
+// HTML dosyalarını serve et
 app.get('*.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', req.path));
+    const filePath = path.join(__dirname, '..', req.path);
+    console.log('HTML dosyası isteniyor:', filePath);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log('HTML dosyası bulunamadı:', filePath);
+        res.status(404).send('Sayfa bulunamadı');
+    }
 });
 
 // Hata yakalama middleware

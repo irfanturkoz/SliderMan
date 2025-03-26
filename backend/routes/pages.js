@@ -242,10 +242,16 @@ router.post('/', auth, upload.fields([
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 
+        // HTML URL'sini oluştur
+        const htmlUrl = process.env.NODE_ENV === 'production'
+            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
+            : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
+
         res.status(201).json({ 
             success: true, 
             page: page.toObject(),
-            htmlFile: `${safeFileName}.html`
+            htmlFile: `${safeFileName}.html`,
+            htmlUrl: htmlUrl
         });
     } catch (error) {
         console.error('Sayfa oluşturulurken hata:', error);
