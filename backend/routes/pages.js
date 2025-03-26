@@ -251,21 +251,32 @@ router.post('/', auth, upload.fields([
 
         // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
-        // public klasörünü oluştur
-        const publicDir = path.join(__dirname, '..', '..', 'public');
+        // HTML dosyasını kaydetmek için doğru klasörü belirle
+        let publicDir;
+        if (process.env.NODE_ENV === 'production') {
+            // Render platformunda root dizini kullan
+            publicDir = path.join(__dirname, '..', '..', 'public');
+        } else {
+            // Yerel geliştirme ortamında
+            publicDir = path.join(__dirname, '..', '..', 'public');
+        }
+        
+        // Klasörün varlığını kontrol et ve gerekirse oluştur
         if (!fs.existsSync(publicDir)) {
             fs.mkdirSync(publicDir, { recursive: true });
         }
+        
+        // HTML dosya yolunu belirle
+        const htmlFilePath = path.join(publicDir, `${safeFileName}.html`);
         
         // HTML dosyasını oluştur
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 
-        // HTML URL'sini oluştur
+        // HTML URL'sini oluştur (her iki ortam için de backend URL'sini kullan)
         const htmlUrl = process.env.NODE_ENV === 'production'
-            ? `https://sliderman-frontend.onrender.com/${safeFileName}.html`
+            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
             : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
 
         res.status(201).json({ 
@@ -335,8 +346,26 @@ router.put('/:id', auth, upload.fields([
 
         // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
+        // HTML dosyasını kaydetmek için doğru klasörü belirle
+        let publicDir;
+        if (process.env.NODE_ENV === 'production') {
+            // Render platformunda root dizini kullan
+            publicDir = path.join(__dirname, '..', '..', 'public');
+        } else {
+            // Yerel geliştirme ortamında
+            publicDir = path.join(__dirname, '..', '..', 'public');
+        }
+        
+        // Klasörün varlığını kontrol et ve gerekirse oluştur
+        if (!fs.existsSync(publicDir)) {
+            fs.mkdirSync(publicDir, { recursive: true });
+        }
+        
+        // HTML dosya yolunu belirle
+        const htmlFilePath = path.join(publicDir, `${safeFileName}.html`);
+        
+        // HTML dosyasını oluştur
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 

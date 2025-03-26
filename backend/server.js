@@ -40,15 +40,24 @@ app.use('/api/pages', require('./routes/pages'));
 
 // HTML dosyalarını serve et
 app.get('*.html', (req, res) => {
-    const filePath = path.join(__dirname, '..', 'public', req.path);
+    // URL'den dosya adını al
+    const fileName = req.path.substring(1); // Başındaki / karakterini kaldır
+    const filePath = path.join(__dirname, '..', 'public', fileName);
     console.log('HTML dosyası isteniyor:', filePath);
     
     if (fs.existsSync(filePath)) {
+        console.log('HTML dosyası bulundu, gönderiliyor...');
         res.sendFile(filePath);
     } else {
         console.log('HTML dosyası bulunamadı:', filePath);
+        console.log('Mevcut dosyalar:', fs.readdirSync(path.join(__dirname, '..', 'public')).join(', '));
         res.status(404).send('Sayfa bulunamadı');
     }
+});
+
+// Kök yolu için yönlendirme
+app.get('/', (req, res) => {
+    res.send('SliderMan Backend API - <a href="/api/pages">Sayfaları Görüntüle</a>');
 });
 
 // Hata yakalama middleware
