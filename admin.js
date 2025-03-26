@@ -271,8 +271,8 @@ async function loadPage(pageId) {
 // Medya listesini güncelle
 function updateMediaList(images = [], videos = []) {
     console.log('Medya listesi güncelleniyor...');
-    console.log('Resimler:', images);
-    console.log('Videolar:', videos);
+    console.log('Resimler:', JSON.stringify(images, null, 2));
+    console.log('Videolar:', JSON.stringify(videos, null, 2));
     
     // Medya bölümünü göster
     const mediaSection = document.getElementById('mediaSection');
@@ -308,12 +308,15 @@ function updateMediaList(images = [], videos = []) {
         return 0;
     });
     
-    console.log('Birleştirilmiş ve sıralanmış medya:', allMedia);
+    console.log('Birleştirilmiş ve sıralanmış medya:', JSON.stringify(allMedia, null, 2));
     
     if (allMedia.length === 0) {
         allMediaList.innerHTML = '<div class="alert alert-info">Henüz medya bulunmuyor.</div>';
         return;
     }
+    
+    // API URL'sini belirle
+    const apiBaseUrl = API_URL.replace('/api', '');
     
     allMedia.forEach((media, index) => {
         if (!media) {
@@ -334,28 +337,41 @@ function updateMediaList(images = [], videos = []) {
         if (media.type === 'image') {
             // URL'yi kontrol et ve düzelt
             mediaUrl = media.url;
+            console.log(`Resim ${index} orijinal URL:`, mediaUrl);
+            
             if (!mediaUrl) {
                 // URL yoksa filename kullanarak oluştur
                 if (media.filename) {
-                    mediaUrl = `/uploads/pages/${media.filename}`;
+                    mediaUrl = `${apiBaseUrl}/uploads/pages/${media.filename}`;
+                    console.log(`Resim ${index} filename'den oluşturulan URL:`, mediaUrl);
                 }
             }
             
             // Eğer URL hala yoksa veya geçersizse
             if (!mediaUrl || mediaUrl === 'undefined') {
-                mediaUrl = '/img/no-image.png'; // Varsayılan resim
+                mediaUrl = `${apiBaseUrl}/img/no-image.png`; // Varsayılan resim
+                console.log(`Resim ${index} varsayılan URL:`, mediaUrl);
             }
             
             // URL'nin doğru formatta olduğundan emin ol
             if (mediaUrl && !mediaUrl.startsWith('http') && !mediaUrl.startsWith('/')) {
                 mediaUrl = '/' + mediaUrl;
+                console.log(`Resim ${index} düzeltilmiş URL:`, mediaUrl);
             }
             
-            mediaTitle = media.alt || media.title || 'Resim';
+            // Eğer URL göreceli ise ve API_URL ile başlamıyorsa, tam URL oluştur
+            if (mediaUrl && mediaUrl.startsWith('/') && !mediaUrl.startsWith('//')) {
+                // URL'nin başında zaten / varsa kaldır
+                const cleanPath = mediaUrl.startsWith('/') ? mediaUrl.substring(1) : mediaUrl;
+                mediaUrl = `${window.location.origin}/${cleanPath}`;
+                console.log(`Resim ${index} tam URL:`, mediaUrl);
+            }
+            
+            mediaTitle = media.originalname || media.alt || media.title || 'Resim';
             
             mediaContent = `
                 <div class="media-preview">
-                    <img src="${mediaUrl}" alt="${mediaTitle}" class="img-thumbnail">
+                    <img src="${mediaUrl}" alt="${mediaTitle}" class="img-thumbnail" onerror="this.src='${apiBaseUrl}/img/no-image.png'">
                 </div>
                 <div class="media-info">
                     <span class="media-title">${mediaTitle}</span>
@@ -365,21 +381,34 @@ function updateMediaList(images = [], videos = []) {
         } else if (media.type === 'video') {
             // URL'yi kontrol et ve düzelt
             mediaUrl = media.url;
+            console.log(`Video ${index} orijinal URL:`, mediaUrl);
+            
             if (!mediaUrl) {
                 // URL yoksa filename kullanarak oluştur
                 if (media.filename) {
-                    mediaUrl = `/uploads/pages/${media.filename}`;
+                    mediaUrl = `${apiBaseUrl}/uploads/pages/${media.filename}`;
+                    console.log(`Video ${index} filename'den oluşturulan URL:`, mediaUrl);
                 }
             }
             
             // Eğer URL hala yoksa veya geçersizse
             if (!mediaUrl || mediaUrl === 'undefined') {
-                mediaUrl = '/img/no-video.png'; // Varsayılan video önizleme
+                mediaUrl = `${apiBaseUrl}/img/no-video.png`; // Varsayılan video önizleme
+                console.log(`Video ${index} varsayılan URL:`, mediaUrl);
             }
             
             // URL'nin doğru formatta olduğundan emin ol
             if (mediaUrl && !mediaUrl.startsWith('http') && !mediaUrl.startsWith('/')) {
                 mediaUrl = '/' + mediaUrl;
+                console.log(`Video ${index} düzeltilmiş URL:`, mediaUrl);
+            }
+            
+            // Eğer URL göreceli ise ve API_URL ile başlamıyorsa, tam URL oluştur
+            if (mediaUrl && mediaUrl.startsWith('/') && !mediaUrl.startsWith('//')) {
+                // URL'nin başında zaten / varsa kaldır
+                const cleanPath = mediaUrl.startsWith('/') ? mediaUrl.substring(1) : mediaUrl;
+                mediaUrl = `${window.location.origin}/${cleanPath}`;
+                console.log(`Video ${index} tam URL:`, mediaUrl);
             }
             
             // Video türünü belirle (YouTube, Vimeo veya dosya)
@@ -403,14 +432,14 @@ function updateMediaList(images = [], videos = []) {
                 }
             } else {
                 // Yerel video dosyası
-                videoPreview = `<video controls><source src="${mediaUrl}" type="video/mp4"></video>`;
+                videoPreview = `<video controls><source src="${mediaUrl}" type="video/mp4" onerror="this.parentElement.innerHTML='<div class=\\'video-thumbnail\\'><i class=\\'fas fa-video\\'></i></div>'"></video>`;
             }
             
-            mediaTitle = media.title || 'Video';
+            mediaTitle = media.originalname || media.title || 'Video';
             
             mediaContent = `
                 <div class="media-preview">
-                    ${videoPreview || '<div class="video-thumbnail"><i class="fas fa-video"></i></div>'}
+                    ${videoPreview || `<div class="video-thumbnail"><i class="fas fa-video"></i><img src="${apiBaseUrl}/img/no-video.png" alt="Video Önizleme" style="display:none;"></div>`}
                 </div>
                 <div class="media-info">
                     <span class="media-title">${mediaTitle}</span>
