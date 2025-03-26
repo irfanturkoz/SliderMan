@@ -65,12 +65,14 @@
         
         .slider-controls {
             position: absolute;
-            bottom: 20px;
+            top: 50%;
             left: 0;
             width: 100%;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             z-index: 10;
+            transform: translateY(-50%);
+            padding: 0 20px;
             pointer-events: none;
         }
         
@@ -83,13 +85,43 @@
             height: 50px;
             border-radius: 50%;
             cursor: pointer;
-            margin: 0 20px;
             pointer-events: auto;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
         }
         
         .slider-arrow:hover {
             background-color: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .slider-container:hover .slider-arrow {
+            opacity: 0.9;
+        }
+        
+        /* Responsive tasarım için medya sorguları */
+        @media (max-width: 768px) {
+            .slider-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .slider-controls {
+                padding: 0 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .slider-arrow {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -99,8 +131,8 @@
     </div>
 
     <div class="slider-controls">
-        <button class="slider-arrow prev-slide">&lt;</button>
-        <button class="slider-arrow next-slide">&gt;</button>
+        <button class="slider-arrow prev-slide"><i class="fas fa-chevron-left"></i></button>
+        <button class="slider-arrow next-slide"><i class="fas fa-chevron-right"></i></button>
     </div>
 
     <script>
