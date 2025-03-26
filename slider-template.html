@@ -54,26 +54,47 @@
 
         .slider-controls {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50%;
+            transform: translateY(-50%);
             z-index: 100;
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 20px;
+            pointer-events: none;
         }
 
         .slider-controls button {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.3);
             border: none;
-            padding: 10px 20px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
-            border-radius: 5px;
-            color: #333;
-            font-weight: bold;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            pointer-events: auto;
         }
 
         .slider-controls button:hover {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .slider-controls button:active {
+            transform: scale(0.95);
+        }
+
+        .slider-controls .prev-btn {
+            margin-right: auto;
+        }
+
+        .slider-controls .next-btn {
+            margin-left: auto;
         }
 
         .slider-dots {
@@ -105,9 +126,8 @@
     </div>
 
     <div class="slider-controls">
-        <button onclick="prevSlide()">Önceki</button>
-        <button onclick="nextSlide()">Sonraki</button>
-        <button onclick="togglePlayPause()">Duraklat</button>
+        <button class="prev-btn" onclick="prevSlide()">❮</button>
+        <button class="next-btn" onclick="nextSlide()">❯</button>
     </div>
 
     <div class="slider-dots" id="sliderDots"></div>
@@ -198,7 +218,6 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') prevSlide();
             if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === ' ') togglePlayPause();
         });
 
         // Dokunmatik kontrolleri ekle
