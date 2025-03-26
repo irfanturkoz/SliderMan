@@ -85,7 +85,6 @@
             z-index: 10;
             transform: translateY(-50%);
             padding: 0 20px;
-            pointer-events: none;
         }
         
         /* Sağdaki buton için özel stil */
@@ -108,6 +107,7 @@
             align-items: center;
             justify-content: center;
             opacity: 0.7;
+            z-index: 20;
         }
         
         .slider-arrow:hover {
@@ -143,7 +143,7 @@
     </style>
 </head>
 <body>
-    <div class="slider-container" id="slider" data-transition-interval="{{transitionInterval}}">
+    <div class="slider-container" id="slider" data-transition-interval="20000">
         <!-- Slider içeriği backend tarafından eklenecek -->
     </div>
 
