@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Slider elemanlarını seç
     const slider = document.getElementById('slider');
-    const slides = document.querySelectorAll('.slider-item');
+    const slides = document.querySelectorAll('.slider-slide');
     const prevButton = document.querySelector('.prev-slide');
     const nextButton = document.querySelector('.next-slide');
     
