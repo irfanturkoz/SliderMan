@@ -4,6 +4,7 @@
 // Global değişkenler
 let currentEditingPageId = null;
 let token = null;
+const API_URL = 'https://sliderman-backend.onrender.com/api';
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', async function() {
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function verifyToken() {
     try {
         console.log('Token doğrulaması yapılıyor...');
-        const response = await fetch('http://localhost:3000/api/auth/verify', {
+        const response = await fetch(`${API_URL}/auth/verify`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -70,7 +71,7 @@ async function loadPages() {
     try {
         console.log('Sayfaları yükleme başlatılıyor...');
         
-        const response = await fetch('http://localhost:3000/api/pages', {
+        const response = await fetch(`${API_URL}/pages`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -215,7 +216,7 @@ async function loadPage(pageId) {
     try {
         console.log(`Sayfa detayları yükleniyor: ${pageId}`);
         
-        const response = await fetch(`http://localhost:3000/api/pages/${pageId}`, {
+        const response = await fetch(`${API_URL}/pages/${pageId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -501,7 +502,7 @@ async function updateAllMediaOrder() {
         console.log('Sayfa ID:', currentPage);
         console.log('Karışık sıralama:', mixedOrder);
 
-        const response = await fetch('http://localhost:3000/api/pages/update-media-order', {
+        const response = await fetch(`${API_URL}/pages/update-media-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -538,8 +539,8 @@ async function createOrUpdatePage(formData) {
         const isEdit = pageId && pageId.trim() !== '';
         
         const url = isEdit 
-            ? `http://localhost:3000/api/pages/${pageId}` 
-            : 'http://localhost:3000/api/pages';
+            ? `${API_URL}/pages/${pageId}` 
+            : `${API_URL}/pages`;
         
         const method = isEdit ? 'PUT' : 'POST';
         
@@ -589,7 +590,7 @@ async function createOrUpdatePage(formData) {
 // Sayfa sil
 async function deletePage(pageId) {
     try {
-        const response = await fetch(`http://localhost:3000/api/pages/${pageId}`, {
+        const response = await fetch(`${API_URL}/pages/${pageId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -632,7 +633,7 @@ async function deleteMedia(mediaId, mediaType) {
         }
         
         const endpoint = mediaType === 'image' ? 'images' : 'videos';
-        const url = `http://localhost:3000/api/pages/${currentEditingPageId}/${endpoint}/${mediaId}`;
+        const url = `${API_URL}/pages/${currentEditingPageId}/${endpoint}/${mediaId}`;
         
         console.log('Silme isteği URL:', url);
         
