@@ -102,9 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 nextSlide();
             };
             
-            // Belirli bir süre sonra otomatik olarak bir sonraki slide'a geç
-            // Kullanıcı videoyu oynatmasa bile slider çalışmaya devam etsin
-            slideTimer = setTimeout(nextSlide, transitionInterval);
+            // Video için zamanlayıcı kullanma, videonun kendi süresi bitince otomatik olarak geçecek
+            // Sadece video oynatılamazsa bir yedek zamanlayıcı kullan
         } else {
             // Resim varsa transitionInterval süresi sonra geç
             console.log('Resim slide aktif edildi, ' + transitionInterval + 'ms sonra geçilecek');
