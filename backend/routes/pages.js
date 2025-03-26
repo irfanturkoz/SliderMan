@@ -46,7 +46,6 @@ function createHtmlTemplate(page) {
         
         // Medya öğelerini oluştur
         let mediaItems = '';
-        let itemIndex = 0;
         
         // Tüm medya öğelerini birleştir ve sırala
         const allMedia = [];
@@ -76,35 +75,35 @@ function createHtmlTemplate(page) {
         // Medya öğelerini order değerine göre sırala
         allMedia.sort((a, b) => a.order - b.order);
         
-        console.log('Sıralanmış medya:', allMedia.map(m => `${m.type}:${m.data._id} (order=${m.order})`));
-        
         // Medya öğelerini sırayla işle
         allMedia.forEach((media, index) => {
             if (media.type === 'image') {
                 const image = media.data;
-                // Backend URL'sini kullan
-                const imageUrl = `http://localhost:3000/uploads/pages/${image.filename}`;
+                const imageUrl = process.env.NODE_ENV === 'production' 
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`
+                    : `/uploads/pages/${image.filename}`;
                 
                 mediaItems += `
-        <div class="slider-item${index === 0 ? ' active' : ''}">
-            <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image">
-        </div>`;
+                <div class="slider-item${index === 0 ? ' active' : ''}">
+                    <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image">
+                </div>`;
             } else if (media.type === 'video') {
                 const video = media.data;
-                // Backend URL'sini kullan
-                const videoUrl = `http://localhost:3000/uploads/pages/${video.filename}`;
+                const videoUrl = process.env.NODE_ENV === 'production'
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`
+                    : `/uploads/pages/${video.filename}`;
                 
                 mediaItems += `
-        <div class="slider-item${index === 0 ? ' active' : ''}">
-            <video autoplay muted playsinline loop>
-                <source src="${videoUrl}" type="${video.mimetype || 'video/mp4'}">
-            </video>
-        </div>`;
+                <div class="slider-item${index === 0 ? ' active' : ''}">
+                    <video autoplay muted playsinline loop>
+                        <source src="${videoUrl}" type="${video.mimetype || 'video/mp4'}">
+                    </video>
+                </div>`;
             }
         });
         
         // HTML şablonunu oluştur
-        const templatePath = path.join(__dirname, '../templates/slider-template.html');
+        const templatePath = path.join(__dirname, '../../slider-template.html');
         let templateContent = fs.readFileSync(templatePath, 'utf8');
         
         // Örnek içeriği gerçek içerikle değiştir
@@ -236,18 +235,17 @@ router.post('/', auth, upload.fields([
         // Güvenli dosya adı oluştur
         const safeFileName = createSafeFileName(page.name);
 
-        // HTML dosyasını oluştur
+        // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
-        console.log(`HTML dosyası oluşturuldu: ${htmlFilePath}`);
+        console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 
-        res.json({
-            message: 'Sayfa başarıyla oluşturuldu',
-            page: page,
-            htmlUrl: htmlFileName
+        res.status(201).json({ 
+            success: true, 
+            page: page.toObject(),
+            htmlFile: `${safeFileName}.html`
         });
     } catch (error) {
         console.error('Sayfa oluşturulurken hata:', error);
@@ -308,18 +306,18 @@ router.put('/:id', auth, upload.fields([
         // Güvenli dosya adı oluştur
         const safeFileName = createSafeFileName(page.name);
 
-        // HTML dosyasını oluştur
+        // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
-        console.log(`HTML dosyası oluşturuldu: ${htmlFilePath}`);
+        console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
 
-        res.json({
+        res.json({ 
+            success: true, 
             message: 'Sayfa başarıyla güncellendi',
-            page: page,
-            htmlUrl: htmlFileName
+            page: page.toObject(),
+            htmlFile: `${safeFileName}.html`
         });
     } catch (error) {
         console.error('Sayfa güncelleme hatası:', error);
@@ -337,8 +335,7 @@ router.delete('/:id', auth, async (req, res) => {
 
         // HTML dosyasını sil
         const safeFileName = createSafeFileName(page.name);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
         
         if (fs.existsSync(htmlFilePath)) {
             fs.unlinkSync(htmlFilePath);
@@ -413,14 +410,13 @@ router.delete('/:pageId/images/:imageId', auth, async (req, res) => {
         // Sayfayı kaydet
         await page.save();
         
-        // HTML dosyasını güncelle
+        // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
-        
         const htmlContent = createHtmlTemplate(page);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        
         fs.writeFileSync(htmlFilePath, htmlContent);
-        console.log(`HTML dosyası güncellendi: ${htmlFilePath}`);
+        console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
         
         res.json({ 
             success: true, 
@@ -466,14 +462,13 @@ router.delete('/:pageId/videos/:videoId', auth, async (req, res) => {
         // Sayfayı kaydet
         await page.save();
         
-        // HTML dosyasını güncelle
+        // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
-        
         const htmlContent = createHtmlTemplate(page);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        
         fs.writeFileSync(htmlFilePath, htmlContent);
-        console.log(`HTML dosyası güncellendi: ${htmlFilePath}`);
+        console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
         
         res.json({ 
             success: true, 
@@ -523,14 +518,13 @@ router.post('/update-media-order', auth, async (req, res) => {
         // Sayfayı kaydet
         await page.save();
 
-        // HTML dosyasını güncelle
+        // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
-        const htmlFileName = `${safeFileName}.html`;
-        const htmlFilePath = path.join(__dirname, '../../', htmlFileName);
-        
         const htmlContent = createHtmlTemplate(page);
+        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        
         fs.writeFileSync(htmlFilePath, htmlContent);
-        console.log(`HTML dosyası güncellendi: ${htmlFilePath}`);
+        console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
 
         res.json({ success: true, message: 'Medya sıralaması başarıyla güncellendi' });
     } catch (error) {

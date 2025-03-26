@@ -11,7 +11,11 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 
 // CORS'u aktif et
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // JSON ve form verilerini parse et
 app.use(express.json());
