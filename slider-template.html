@@ -151,6 +151,10 @@
             const newVideo = slides[currentSlide].querySelector('video');
             if (newVideo) {
                 newVideo.play();
+                // Video bittiğinde sonraki slide'a geç
+                newVideo.onended = () => {
+                    nextSlide();
+                };
             }
         }
 
@@ -183,13 +187,7 @@
                 const currentItem = slides[currentSlide];
                 const isVideo = currentItem.querySelector('video');
                 
-                if (isVideo) {
-                    // Eğer video varsa, video bittiğinde sonraki slide'a geç
-                    const video = currentItem.querySelector('video');
-                    video.onended = () => {
-                        nextSlide();
-                    };
-                } else {
+                if (!isVideo) {
                     // Resim ise normal geçiş yap
                     nextSlide();
                 }
@@ -236,6 +234,10 @@
         const firstVideo = slides[0].querySelector('video');
         if (firstVideo) {
             firstVideo.play();
+            // İlk video bittiğinde sonraki slide'a geç
+            firstVideo.onended = () => {
+                nextSlide();
+            };
         }
         
         startSlideInterval();
