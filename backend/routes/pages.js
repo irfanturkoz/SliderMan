@@ -79,9 +79,14 @@ function createHtmlTemplate(page) {
         allMedia.forEach((media, index) => {
             if (media.type === 'image') {
                 const image = media.data;
-                const imageUrl = process.env.NODE_ENV === 'production' 
-                    ? `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`
-                    : `/uploads/pages/${image.filename}`;
+                // Hem yerel hem de üretim ortamında çalışacak şekilde URL oluştur
+                let imageUrl = '';
+                if (process.env.NODE_ENV === 'production') {
+                    imageUrl = `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`;
+                } else {
+                    // Yerel geliştirme ortamında
+                    imageUrl = `http://localhost:10000/uploads/pages/${image.filename}`;
+                }
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
@@ -89,9 +94,14 @@ function createHtmlTemplate(page) {
                 </div>`;
             } else if (media.type === 'video') {
                 const video = media.data;
-                const videoUrl = process.env.NODE_ENV === 'production'
-                    ? `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`
-                    : `/uploads/pages/${video.filename}`;
+                // Hem yerel hem de üretim ortamında çalışacak şekilde URL oluştur
+                let videoUrl = '';
+                if (process.env.NODE_ENV === 'production') {
+                    videoUrl = `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`;
+                } else {
+                    // Yerel geliştirme ortamında
+                    videoUrl = `http://localhost:10000/uploads/pages/${video.filename}`;
+                }
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
@@ -112,6 +122,10 @@ function createHtmlTemplate(page) {
         // Geçiş süresini ekle
         const transitionInterval = page.transitionInterval || 20000;
         templateContent = templateContent.replace('{{transitionInterval}}', transitionInterval);
+        
+        // CSS ve JavaScript dosyalarının yollarını düzelt
+        templateContent = templateContent.replace('css/slider.css', 'https://sliderman-backend.onrender.com/css/slider.css');
+        templateContent = templateContent.replace('js/slider.js', 'https://sliderman-backend.onrender.com/js/slider.js');
         
         console.log('HTML şablonu başarıyla oluşturuldu');
         return templateContent;

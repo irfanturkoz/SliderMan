@@ -87,7 +87,7 @@
     </style>
 </head>
 <body>
-    <div class="slider-container" id="slider">
+    <div class="slider-container" id="slider" data-transition-interval="{{transitionInterval}}">
         <!-- Slider içeriği backend tarafından eklenecek -->
     </div>
 
@@ -95,15 +95,6 @@
         <button class="slider-arrow prev-slide">&lt;</button>
         <button class="slider-arrow next-slide">&gt;</button>
     </div>
-
-    <script>
-        window.addEventListener('load', function() {
-            const transitionInterval = {{transitionInterval}};
-            if (typeof window.setSliderTransitionInterval === 'function') {
-                window.setSliderTransitionInterval(transitionInterval);
-            }
-        });
-    </script>
 
     <script src="https://sliderman-backend.onrender.com/js/slider.js"></script>
     
