@@ -19,12 +19,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSlide = 0;
     let slideTimer = null;
     let isTransitioning = false; // Geçiş durumunu takip etmek için
+    let slideStartTime = 0; // Slide'ın başlangıç zamanı
+    let remainingTime = 0; // Kalan süre
     
     // Geçiş süresini HTML'den al veya varsayılan değeri kullan
     let transitionInterval = 20000; // Varsayılan değer: 20 saniye
     
     if (slider && slider.dataset.transitionInterval) {
-        transitionInterval = parseInt(slider.dataset.transitionInterval) || 20000;
+        const parsedInterval = parseInt(slider.dataset.transitionInterval);
+        if (!isNaN(parsedInterval) && parsedInterval > 0) {
+            transitionInterval = parsedInterval;
+        }
     }
     
     console.log('Slider geçiş süresi:', transitionInterval, 'ms');
@@ -45,6 +50,30 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(slideTimer);
             slideTimer = null;
             console.log('Zamanlayıcı temizlendi');
+        }
+    }
+    
+    // Zamanlayıcı durumunu kontrol et ve güncelle
+    function checkTimer() {
+        if (isTransitioning) return;
+        
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - slideStartTime;
+        
+        if (elapsedTime >= transitionInterval) {
+            // Süre dolmuşsa sonraki slide'a geç
+            console.log('Zamanlayıcı süresi doldu, sonraki slide\'a geçiliyor');
+            nextSlide();
+        } else {
+            // Hala süre varsa, kalan süre için yeni bir zamanlayıcı oluştur
+            remainingTime = transitionInterval - elapsedTime;
+            console.log('Kalan süre:', remainingTime, 'ms');
+            
+            clearSlideTimer();
+            slideTimer = setTimeout(function() {
+                console.log('Resim süresi tamamlandı, sonraki slide\'a geçiliyor');
+                nextSlide();
+            }, remainingTime);
         }
     }
 
@@ -121,6 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const activeSlide = slides[index];
         const video = activeSlide.querySelector('video');
         
+        // Slide başlangıç zamanını kaydet
+        slideStartTime = new Date().getTime();
+        
         if (video) {
             // Video varsa
             console.log('Video slide aktif edildi');
@@ -157,9 +189,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Önceki zamanlayıcıyı temizle ve yeni bir zamanlayıcı oluştur
             clearSlideTimer();
+            
+            // Kesin olarak transitionInterval süresi sonra geçmesini sağla
             slideTimer = setTimeout(function() {
                 console.log('Resim süresi doldu (' + transitionInterval + 'ms), sonraki slide\'a geçiliyor');
-                nextSlide();
+                // Zamanlayıcı tamamlandığında geçiş yapılacağını garanti et
+                if (!isTransitioning) {
+                    nextSlide();
+                } else {
+                    console.log('Geçiş sırasında olduğu için sonraki slide\'a geçiş ertelendi');
+                    // Geçiş tamamlandıktan sonra tekrar dene
+                    setTimeout(nextSlide, 1500);
+                }
             }, transitionInterval);
         }
     }
@@ -213,6 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
             nextSlide();
         }
     });
+    
+    // Periyodik olarak zamanlayıcıyı kontrol et (her 5 saniyede bir)
+    setInterval(checkTimer, 5000);
 
     // Sayfa yüklendiğinde
     if (slides && slides.length > 0) {
