@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Statik dosyaları serve et
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/js', express.static(path.join(__dirname, '..', 'js'))); 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // MongoDB bağlantısı
