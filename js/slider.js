@@ -19,8 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSlide = 0;
     let slideTimer = null;
     let isTransitioning = false; // Geçiş durumunu takip etmek için
-    let slideStartTime = 0; // Slide'ın başlangıç zamanı
-    let remainingTime = 0; // Kalan süre
     
     // Geçiş süresini HTML'den al veya varsayılan değeri kullan
     let transitionInterval = 20000; // Varsayılan değer: 20 saniye
@@ -41,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             video.pause();
             video.currentTime = 0;
             video.muted = true;
+            video.onended = null; // Önceki event listener'ları temizle
         });
     }
 
@@ -50,30 +49,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(slideTimer);
             slideTimer = null;
             console.log('Zamanlayıcı temizlendi');
-        }
-    }
-    
-    // Zamanlayıcı durumunu kontrol et ve güncelle
-    function checkTimer() {
-        if (isTransitioning) return;
-        
-        const currentTime = new Date().getTime();
-        const elapsedTime = currentTime - slideStartTime;
-        
-        if (elapsedTime >= transitionInterval) {
-            // Süre dolmuşsa sonraki slide'a geç
-            console.log('Zamanlayıcı süresi doldu, sonraki slide\'a geçiliyor');
-            nextSlide();
-        } else {
-            // Hala süre varsa, kalan süre için yeni bir zamanlayıcı oluştur
-            remainingTime = transitionInterval - elapsedTime;
-            console.log('Kalan süre:', remainingTime, 'ms');
-            
-            clearSlideTimer();
-            slideTimer = setTimeout(function() {
-                console.log('Resim süresi tamamlandı, sonraki slide\'a geçiliyor');
-                nextSlide();
-            }, remainingTime);
         }
     }
 
@@ -96,17 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Geçiş sırasında olduğumuzu belirt
         isTransitioning = true;
+        console.log('Geçiş başladı, hedef slide:', index);
+
+        // Önce tüm videoları durdur
+        disableAllVideos();
 
         // Aktif slide'ı bul
         const currentActiveSlide = document.querySelector('.slider-slide.active');
-        
-        // Tüm videoları durdur
-        const videos = document.querySelectorAll('video');
-        videos.forEach(video => {
-            video.pause();
-            video.currentTime = 0;
-            video.onended = null;
-        });
         
         // Eğer zaten bir aktif slide varsa, geçiş efekti uygula
         if (currentActiveSlide) {
@@ -116,33 +87,42 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Geçiş tamamlandıktan sonra yeni slide'ı göster
             setTimeout(() => {
-                // Tüm slide'ları deaktif et
+                // Tüm slide'ları deaktif et ve görünmez yap
                 slides.forEach(slide => {
                     slide.classList.remove('active');
+                    slide.style.opacity = '0';
                 });
                 
                 // Yeni slide'ı aktif et
                 slides[index].classList.add('active');
-                slides[index].style.transition = 'opacity 1s ease-in';
-                slides[index].style.opacity = '1';
                 
-                // Aktif slide'daki medyayı başlat
-                activateSlideMedia(index);
-                
-                // Geçiş tamamlandı
-                isTransitioning = false;
-                console.log('Geçiş tamamlandı, yeni aktif slide:', index);
+                // Kısa bir gecikme ile opacity'yi artır (daha akıcı geçiş için)
+                setTimeout(() => {
+                    slides[index].style.transition = 'opacity 1s ease-in';
+                    slides[index].style.opacity = '1';
+                    
+                    // Aktif slide'daki medyayı başlat
+                    setTimeout(() => {
+                        activateSlideMedia(index);
+                        
+                        // Geçiş tamamlandı
+                        isTransitioning = false;
+                        console.log('Geçiş tamamlandı, yeni aktif slide:', index);
+                    }, 500);
+                }, 100);
             }, 1000); // 1 saniye geçiş süresi
         } else {
             // İlk yükleme - doğrudan aktif et
             slides[index].classList.add('active');
             slides[index].style.opacity = '1';
-            activateSlideMedia(index);
-            isTransitioning = false;
+            
+            setTimeout(() => {
+                activateSlideMedia(index);
+                isTransitioning = false;
+            }, 500);
         }
         
         currentSlide = index;
-        console.log('Aktif slide değişti:', index);
     }
     
     // Slide medyasını aktifleştir (video veya resim)
@@ -150,14 +130,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const activeSlide = slides[index];
         const video = activeSlide.querySelector('video');
         
-        // Slide başlangıç zamanını kaydet
-        slideStartTime = new Date().getTime();
-        
         if (video) {
             // Video varsa
             console.log('Video slide aktif edildi');
             video.currentTime = 0;
             video.muted = true; // Videoyu sessiz tut
+            
+            // Video bittiğinde sonraki slide'a geç
+            video.onended = function() {
+                console.log('Video bitti, sonraki slide\'a geçiliyor');
+                nextSlide();
+            };
             
             // Videoyu otomatik başlat
             const playPromise = video.play();
@@ -173,16 +156,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         slideTimer = setTimeout(nextSlide, transitionInterval);
                     });
             }
-
-            // Video bittiğinde sonraki slide'a geç
-            video.onended = function() {
-                console.log('Video bitti, sonraki slide\'a geçiliyor');
-                clearSlideTimer(); // Slide timerı temizle
-                nextSlide();
-            };
-            
-            // Video için zamanlayıcı kullanma, videonun kendi süresi bitince otomatik olarak geçecek
-            // Sadece video oynatılamazsa bir yedek zamanlayıcı kullan
         } else {
             // Resim varsa transitionInterval süresi sonra geç
             console.log('Resim slide aktif edildi, ' + transitionInterval + 'ms sonra geçilecek');
@@ -193,14 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Kesin olarak transitionInterval süresi sonra geçmesini sağla
             slideTimer = setTimeout(function() {
                 console.log('Resim süresi doldu (' + transitionInterval + 'ms), sonraki slide\'a geçiliyor');
-                // Zamanlayıcı tamamlandığında geçiş yapılacağını garanti et
-                if (!isTransitioning) {
-                    nextSlide();
-                } else {
-                    console.log('Geçiş sırasında olduğu için sonraki slide\'a geçiş ertelendi');
-                    // Geçiş tamamlandıktan sonra tekrar dene
-                    setTimeout(nextSlide, 1500);
-                }
+                nextSlide();
             }, transitionInterval);
         }
     }
@@ -208,11 +174,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sonraki slide'a geç
     function nextSlide() {
         if (!slides || slides.length <= 1) return;
+        
         // Eğer geçiş sırasındaysak, işlemi iptal et
         if (isTransitioning) {
             console.log('Geçiş sırasında nextSlide isteği iptal edildi');
             return;
         }
+        
         const nextIndex = (currentSlide + 1) % slides.length;
         activateSlide(nextIndex);
     }
@@ -220,11 +188,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Önceki slide'a geç
     function prevSlide() {
         if (!slides || slides.length <= 1) return;
+        
         // Eğer geçiş sırasındaysak, işlemi iptal et
         if (isTransitioning) {
             console.log('Geçiş sırasında prevSlide isteği iptal edildi');
             return;
         }
+        
         const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
         activateSlide(prevIndex);
     }
@@ -254,15 +224,20 @@ document.addEventListener('DOMContentLoaded', function() {
             nextSlide();
         }
     });
-    
-    // Periyodik olarak zamanlayıcıyı kontrol et (her 5 saniyede bir)
-    setInterval(checkTimer, 5000);
 
     // Sayfa yüklendiğinde
     if (slides && slides.length > 0) {
-        disableAllVideos();
-        activateSlide(0);
-        console.log('Slider başlatıldı, toplam slide sayısı:', slides.length);
+        // Önce tüm slide'ları görünmez yap
+        slides.forEach(slide => {
+            slide.style.opacity = '0';
+            slide.classList.remove('active');
+        });
+        
+        // Kısa bir gecikme ile ilk slide'ı göster
+        setTimeout(() => {
+            activateSlide(0);
+            console.log('Slider başlatıldı, toplam slide sayısı:', slides.length);
+        }, 500);
     } else {
         console.error('Slider öğeleri bulunamadı!');
     }
