@@ -80,7 +80,7 @@ function createHtmlTemplate(page) {
             if (media.type === 'image') {
                 const image = media.data;
                 const imageUrl = process.env.NODE_ENV === 'production' 
-                    ? `/uploads/pages/${image.filename}`
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`
                     : `/uploads/pages/${image.filename}`;
                 
                 mediaItems += `
@@ -90,7 +90,7 @@ function createHtmlTemplate(page) {
             } else if (media.type === 'video') {
                 const video = media.data;
                 const videoUrl = process.env.NODE_ENV === 'production'
-                    ? `/uploads/pages/${video.filename}`
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`
                     : `/uploads/pages/${video.filename}`;
                 
                 mediaItems += `
