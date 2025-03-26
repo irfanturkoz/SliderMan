@@ -1,5 +1,6 @@
+/* SliderMan CSS - Tamamen yeniden düzenlenmiş sürüm */
+
 * {
-    /* Slider Stilleri */
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -20,151 +21,13 @@ body {
 }
 
 .slider {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.5s ease-in-out;
-}
-
-.slider-item {
-    flex: 0 0 100%;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #000;
     position: relative;
-}
-
-.slider-item img {
-    width: 100%;
-    object-fit: contain;
-}
-
-.video-container {
     width: 100%;
     height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #000;
     overflow: hidden;
 }
 
-.video-container iframe,
-.video-container video {
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
-
-/* Video kontrol çubuğunu gizle */
-video::-webkit-media-controls-enclosure,
-video::-webkit-media-controls-panel,
-video::-webkit-media-controls {
-    display: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-video::-webkit-media-controls-play-button,
-video::-webkit-media-controls-timeline,
-video::-webkit-media-controls-current-time-display,
-video::-webkit-media-controls-time-remaining-display,
-video::-webkit-media-controls-time-remaining-display,
-video::-webkit-media-controls-mute-button,
-video::-webkit-media-controls-toggle-closed-captions-button,
-video::-webkit-media-controls-volume-slider {
-    display: none !important;
-}
-
-video::-moz-media-controls {
-    display: none !important;
-}
-
-video::--ms-media-controls {
-    display: none !important;
-}
-
-/* Firefox için */
-video::-moz-range-thumb,
-video::-moz-range-track {
-    display: none !important;
-}
-
-/* Microsoft Edge için */
-video::-ms-fill-lower,
-video::-ms-fill-upper,
-video::-ms-thumb,
-video::-ms-track,
-video::-ms-tooltip {
-    display: none !important;
-}
-
-.slider-prev,
-.slider-next {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #333;
-    z-index: 10;
-    transition: background-color 0.3s;
-}
-
-.slider-prev:hover,
-.slider-next:hover {
-    background-color: rgba(255, 255, 255, 0.8);
-}
-
-.slider-prev {
-    left: 20px;
-}
-
-.slider-next {
-    right: 20px;
-}
-
-.slider-dots {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-    z-index: 10;
-}
-
-.slider-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.slider-dot.active {
-    background-color: #fff;
-}
-
+/* Slide temel stilleri */
 .slider-slide {
     position: absolute;
     top: 0;
@@ -174,16 +37,18 @@ video::-ms-tooltip {
     opacity: 0;
     transition: opacity 1s ease;
     z-index: 0;
-    visibility: hidden;
-    overflow: hidden;
+    display: none; /* Varsayılan olarak gizli */
+    background-color: #000;
 }
 
+/* Aktif slide stilleri */
 .slider-slide.active {
     z-index: 10;
     opacity: 1;
-    visibility: visible;
+    display: block; /* Aktif olduğunda görünür */
 }
 
+/* Resim stilleri */
 .slider-slide img {
     width: 100%;
     height: 100%;
@@ -191,8 +56,10 @@ video::-ms-tooltip {
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 1;
 }
 
+/* Video stilleri */
 .slider-slide video {
     width: 100%;
     height: 100%;
@@ -200,56 +67,48 @@ video::-ms-tooltip {
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 1;
 }
 
+/* Kontrol butonları */
 .slider-controls {
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 0;
     width: 100%;
-    height: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    z-index: 20;
+    z-index: 20; /* Slide'ların üzerinde */
+    transform: translateY(-50%);
+    padding: 0 20px;
 }
 
-.slider-control {
-    background: rgba(0, 0, 0, 0.3);
+.slider-arrow {
+    background-color: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
+    border-radius: 50%;
     width: 50px;
     height: 50px;
-    border-radius: 50%;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
-    margin: 0 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.3s;
-    z-index: 30;
+    transition: background-color 0.3s;
+    z-index: 30; /* En üstte */
 }
 
-.slider-control:hover {
-    background: rgba(0, 0, 0, 0.6);
+.slider-arrow:hover {
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
-/* Responsive ayarlar */
-@media (max-width: 768px) {
-    .slider-control {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-        margin: 0 10px;
-    }
+/* Sağdaki buton için özel stil */
+.next-slide {
+    margin-right: 40px;
 }
 
-/* Font Awesome için geçici çözüm */
-.fa-chevron-left:before {
-    content: "❮";
-}
-
-.fa-chevron-right:before {
-    content: "❯";
+/* Soldaki buton için özel stil */
+.prev-slide {
+    margin-left: 40px;
 }

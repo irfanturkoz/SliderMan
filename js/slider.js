@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentIndex = 0;
     let isTransitioning = false;
     let slideTimer = null;
+    let slideStartTime = null;
     let transitionInterval = 20000; // Varsayılan: 20 saniye
     
     // Geçiş süresini HTML'den al
@@ -66,10 +67,25 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function hideAllSlides() {
         slides.forEach(slide => {
+            // Önce tüm CSS sınıflarını kaldır
             slide.classList.remove('active');
+            
+            // Sonra tüm stil özelliklerini sıfırla
+            slide.style.display = 'none';
             slide.style.opacity = '0';
             slide.style.zIndex = '0';
-            slide.style.visibility = 'hidden'; // Görünürlüğü tamamen kapat
+            slide.style.visibility = 'hidden';
+            
+            // Medya elementlerini durdur
+            const video = slide.querySelector('video');
+            if (video) {
+                try {
+                    video.pause();
+                    video.currentTime = 0;
+                } catch (err) {
+                    console.error('SliderMan: Video durdurma hatası', err);
+                }
+            }
         });
         console.log('SliderMan: Tüm slide\'lar gizlendi');
     }
@@ -90,8 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Önceki zamanlayıcıyı temizle
+        // Önceki zamanlayıcıyı temizle ve başlangıç zamanını kaydet
         clearTimer();
+        slideStartTime = Date.now();
         
         // Geçiş durumunu güncelle
         isTransitioning = true;
@@ -105,9 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hedef slide'ı aktifleştir
         const targetSlide = slides[index];
-        targetSlide.classList.add('active');
+        
+        // Önce görünürlük ve display ayarla
+        targetSlide.style.display = 'block';
+        targetSlide.style.visibility = 'visible';
         targetSlide.style.zIndex = '10';
-        targetSlide.style.visibility = 'visible'; // Önce görünürlüğü aç
+        
+        // Sonra CSS sınıfını ekle
+        targetSlide.classList.add('active');
         
         // Kısa bir gecikme sonra opacity'yi artır (daha akıcı geçiş için)
         setTimeout(() => {
@@ -184,6 +206,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
+     * Zamanlayıcıyı kontrol et - resim süresi dolmuş mu?
+     */
+    function checkTimer() {
+        if (!slideStartTime) return;
+        
+        // Aktif slide'ı kontrol et
+        const activeSlide = document.querySelector('.slider-slide.active');
+        if (!activeSlide) return;
+        
+        // Aktif slide bir video mu?
+        const hasVideo = activeSlide.querySelector('video') !== null;
+        if (hasVideo) return; // Video ise zamanlayıcı kontrolü yapma
+        
+        // Geçen süreyi hesapla
+        const elapsedTime = Date.now() - slideStartTime;
+        
+        // Süre dolmuş mu kontrol et
+        if (elapsedTime >= transitionInterval) {
+            console.log(`SliderMan: Zamanlayıcı kontrolü - Süre dolmuş (${elapsedTime}ms), sonraki slide'a geçiliyor`);
+            nextSlide();
+        } else {
+            console.log(`SliderMan: Zamanlayıcı kontrolü - Süre devam ediyor (${elapsedTime}ms / ${transitionInterval}ms)`);
+        }
+    }
+    
+    // Periyodik olarak zamanlayıcıyı kontrol et
+    setInterval(checkTimer, 5000); // Her 5 saniyede bir kontrol et
+    
+    /**
      * Sonraki slide'a geç
      */
     function nextSlide() {
@@ -207,44 +258,38 @@ document.addEventListener('DOMContentLoaded', function() {
         activateSlide(prevIndex);
     }
     
-    // Buton tıklama olayları
-    if (prevButton) {
-        prevButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('SliderMan: Önceki butonu tıklandı');
-            prevSlide();
-        });
-    }
-    
+    // İleri/geri butonları için event listener'lar
     if (nextButton) {
         nextButton.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('SliderMan: Sonraki butonu tıklandı');
             nextSlide();
         });
     }
     
-    // Klavye kontrolleri
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft') {
+    if (prevButton) {
+        prevButton.addEventListener('click', function(e) {
+            e.preventDefault();
             prevSlide();
-        } else if (e.key === 'ArrowRight') {
+        });
+    }
+    
+    // Klavye kontrollerini ekle
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight') {
             nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            prevSlide();
         }
     });
     
-    // Slider'ı başlat
-    if (slides && slides.length > 0) {
+    // İlk slide'ı göster
+    if (slides.length > 0) {
         // Önce tüm slide'ları gizle
         hideAllSlides();
         
         // Kısa bir gecikme sonra ilk slide'ı göster
         setTimeout(() => {
             activateSlide(0);
-        }, 500);
-        
-        console.log(`SliderMan: Başlatıldı, toplam ${slides.length} slide var`);
-    } else {
-        console.error('SliderMan: Hiç slide bulunamadı!');
+        }, 100);
     }
 });
