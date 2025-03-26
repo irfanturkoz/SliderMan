@@ -52,6 +52,9 @@
         
         console.log(`SliderMan: ${slides.length} slide bulundu`);
         
+        // Sayfa yüklendiğinde tüm videoları durdur ve autoplay özelliğini kaldır
+        disableAllVideoAutoplay();
+        
         // Tüm slide'ları gizle
         hideAllSlides();
         
@@ -68,6 +71,32 @@
         
         // Tüm videoları durdur ve başlangıç durumuna getir
         stopAllVideos();
+    }
+    
+    /**
+     * Tüm videoların autoplay özelliğini kaldır ve durdur
+     */
+    function disableAllVideoAutoplay() {
+        const videos = document.querySelectorAll('video');
+        videos.forEach(video => {
+            try {
+                // Autoplay özelliğini kaldır
+                video.removeAttribute('autoplay');
+                video.autoplay = false;
+                
+                // Videoyu durdur ve başa sar
+                video.pause();
+                video.currentTime = 0;
+                
+                // Event listener'ları temizle
+                video.onended = null;
+                video.onerror = null;
+                
+                console.log('SliderMan: Video autoplay devre dışı bırakıldı');
+            } catch (e) {
+                console.error('SliderMan: Video autoplay devre dışı bırakma hatası', e);
+            }
+        });
     }
     
     /**
@@ -206,21 +235,26 @@
             nextSlide();
         };
         
-        // Videoyu oynat
-        try {
-            const playPromise = video.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.error('SliderMan: Video oynatma hatası', error);
-                    // Hata durumunda sonraki slide'a geç
-                    slideTimer = setTimeout(nextSlide, 5000);
-                });
+        // Videoyu oynat - sadece aktif slide'da
+        if (video.closest('.slider-item, .slider-slide').classList.contains('active')) {
+            try {
+                console.log('SliderMan: Video oynatılıyor (aktif slide)');
+                const playPromise = video.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error('SliderMan: Video oynatma hatası', error);
+                        // Hata durumunda sonraki slide'a geç
+                        slideTimer = setTimeout(nextSlide, 5000);
+                    });
+                }
+            } catch (e) {
+                console.error('SliderMan: Video oynatma exception', e);
+                // Hata durumunda sonraki slide'a geç
+                slideTimer = setTimeout(nextSlide, 5000);
             }
-        } catch (e) {
-            console.error('SliderMan: Video oynatma exception', e);
-            // Hata durumunda sonraki slide'a geç
-            slideTimer = setTimeout(nextSlide, 5000);
+        } else {
+            console.log('SliderMan: Video oynatılmadı (aktif slide değil)');
         }
     }
     
