@@ -3,53 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SliderMan - Basit ve Güvenilir Slider</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="slider.css">
+    <title>Slider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .slider-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .slider-item.active {
+            opacity: 1;
+        }
+
+        .slider-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slider-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slider-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .slider-controls button {
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .slider-controls button:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .slider-dots {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+
+        .slider-dot.active {
+            background: #fff;
+        }
+    </style>
 </head>
 <body>
-    <!-- Slider Ana Konteyner -->
-    <div class="slider-container" id="slider" data-transition-interval="{{transitionInterval}}">
+    <div class="slider-container">
         <!-- Slider içeriği backend tarafından eklenecek -->
     </div>
 
-    <!-- Slider Kontrolleri -->
     <div class="slider-controls">
-        <button class="slider-arrow prev-slide"><i class="fas fa-chevron-left"></i></button>
-        <button class="slider-arrow next-slide"><i class="fas fa-chevron-right"></i></button>
+        <button onclick="prevSlide()">Önceki</button>
+        <button onclick="nextSlide()">Sonraki</button>
+        <button onclick="togglePlayPause()">Duraklat</button>
     </div>
 
-    <!-- Script Yükleyici -->
+    <div class="slider-dots" id="sliderDots"></div>
+
     <script>
-        console.log('Slider şablonu yüklendi');
-        
-        // Script yükleme fonksiyonu
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.body.appendChild(script);
+        let currentSlide = 0;
+        let slides = document.querySelectorAll('.slider-item');
+        let isPlaying = true;
+        let slideInterval;
+
+        // Slider noktalarını oluştur
+        function createDots() {
+            const dotsContainer = document.getElementById('sliderDots');
+            dotsContainer.innerHTML = '';
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = `slider-dot${index === 0 ? ' active' : ''}`;
+                dot.onclick = () => goToSlide(index);
+                dotsContainer.appendChild(dot);
             });
         }
-        
-        // Önce slider.js'i yüklemeyi dene
-        loadScript('slider.js')
-            .catch(() => {
-                console.log('slider.js yüklenemedi, js/slider.js deneniyor...');
-                return loadScript('js/slider.js');
-            })
-            .catch(() => {
-                console.log('js/slider.js yüklenemedi, public/js/slider.js deneniyor...');
-                return loadScript('public/js/slider.js');
-            })
-            .catch(() => {
-                console.error('Hiçbir slider script dosyası yüklenemedi!');
-            });
+
+        // Belirli bir slide'a git
+        function goToSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            document.querySelectorAll('.slider-dot')[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            document.querySelectorAll('.slider-dot')[currentSlide].classList.add('active');
+        }
+
+        // Sonraki slide'a git
+        function nextSlide() {
+            const next = (currentSlide + 1) % slides.length;
+            goToSlide(next);
+        }
+
+        // Önceki slide'a git
+        function prevSlide() {
+            const prev = (currentSlide - 1 + slides.length) % slides.length;
+            goToSlide(prev);
+        }
+
+        // Otomatik geçişi başlat/durdur
+        function togglePlayPause() {
+            if (isPlaying) {
+                clearInterval(slideInterval);
+                isPlaying = false;
+            } else {
+                startSlideInterval();
+                isPlaying = true;
+            }
+        }
+
+        // Otomatik geçiş aralığını başlat
+        function startSlideInterval() {
+            slideInterval = setInterval(nextSlide, {{transitionInterval}});
+        }
+
+        // Klavye kontrollerini ekle
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === ' ') togglePlayPause();
+        });
+
+        // Dokunmatik kontrolleri ekle
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        // Başlangıç ayarları
+        createDots();
+        startSlideInterval();
     </script>
-    
-    <!-- Vimeo API -->
-    <script src="https://player.vimeo.com/api/player.js"></script>
 </body>
 </html>

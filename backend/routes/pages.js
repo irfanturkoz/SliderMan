@@ -79,33 +79,23 @@ function createHtmlTemplate(page) {
         allMedia.forEach((media, index) => {
             if (media.type === 'image') {
                 const image = media.data;
-                // Hem yerel hem de üretim ortamında çalışacak şekilde URL oluştur
-                let imageUrl = '';
-                if (process.env.NODE_ENV === 'production') {
-                    imageUrl = `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`;
-                } else {
-                    // Yerel geliştirme ortamında
-                    imageUrl = `http://localhost:10000/uploads/pages/${image.filename}`;
-                }
+                const imageUrl = process.env.NODE_ENV === 'production' 
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`
+                    : `/uploads/pages/${image.filename}`;
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
-                    <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image" style="width: 100%; object-fit: contain;">
+                    <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image">
                 </div>`;
             } else if (media.type === 'video') {
                 const video = media.data;
-                // Hem yerel hem de üretim ortamında çalışacak şekilde URL oluştur
-                let videoUrl = '';
-                if (process.env.NODE_ENV === 'production') {
-                    videoUrl = `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`;
-                } else {
-                    // Yerel geliştirme ortamında
-                    videoUrl = `http://localhost:10000/uploads/pages/${video.filename}`;
-                }
+                const videoUrl = process.env.NODE_ENV === 'production'
+                    ? `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`
+                    : `/uploads/pages/${video.filename}`;
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
-                    <video class="slider-video" autoplay muted playsinline>
+                    <video autoplay muted playsinline loop>
                         <source src="${videoUrl}" type="${video.mimetype || 'video/mp4'}">
                     </video>
                 </div>`;
@@ -120,12 +110,8 @@ function createHtmlTemplate(page) {
         templateContent = templateContent.replace('<!-- Slider içeriği backend tarafından eklenecek -->', mediaItems);
         
         // Geçiş süresini ekle
-        const transitionInterval = page.transitionInterval || 20000;
+        const transitionInterval = page.transitionInterval || 5000;
         templateContent = templateContent.replace('{{transitionInterval}}', transitionInterval);
-        
-        // CSS ve JavaScript dosyalarının yollarını düzelt
-        templateContent = templateContent.replace('css/slider.css', 'https://sliderman-backend.onrender.com/css/slider.css');
-        templateContent = templateContent.replace('js/slider.js', 'https://sliderman-backend.onrender.com/js/slider.js');
         
         console.log('HTML şablonu başarıyla oluşturuldu');
         return templateContent;
