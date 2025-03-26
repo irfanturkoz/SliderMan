@@ -10,9 +10,6 @@ yarn-error.log
 # Uploads
 uploads/
 
-# Generated HTML files
-*.html
-
 # IDE files
 .vscode/
 .idea/

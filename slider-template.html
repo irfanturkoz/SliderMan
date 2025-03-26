@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SliderMan - Otomatik Slider</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .slider-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+        
+        .slider-item.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        
+        .slider-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            width: 100%;
+        }
+        
+        .slider-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .youtube-video, .vimeo-video {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .slider-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .slider-arrow {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin: 0 20px;
+            pointer-events: auto;
+            transition: background-color 0.3s;
+        }
+        
+        .slider-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="slider-container" id="slider">
+        <!-- Slider içeriği backend tarafından eklenecek -->
+        <!-- Örnek içerik: -->
+        <div class="slider-item active">
+            <img src="http://localhost:3000/uploads/pages/sample1.png" alt="Örnek 1" class="slider-image">
+        </div>
+        
+        <div class="slider-item">
+            <img src="http://localhost:3000/uploads/pages/sample2.png" alt="Örnek 2" class="slider-image">
+        </div>
+        
+        <div class="slider-item">
+            <video>
+                <source src="http://localhost:3000/uploads/pages/sample-video.mp4" type="video/mp4">
+            </video>
+        </div>
+        
+        <!-- Kontrol butonları - SADECE İLERİ/GERİ -->
+        <div class="slider-controls">
+            <button class="slider-arrow prev-slide">&lt;</button>
+            <button class="slider-arrow next-slide">&gt;</button>
+        </div>
+    </div>
+
+    <script>
+        // Backend'den gelen geçiş süresini al ve ayarla
+        window.addEventListener('load', function() {
+            const transitionInterval = {{transitionInterval}};
+            if (typeof window.setSliderTransitionInterval === 'function') {
+                window.setSliderTransitionInterval(transitionInterval);
+            }
+        });
+    </script>
+
+    <script src="js/slider.js"></script>
+    
+    <!-- Vimeo API -->
+    <script src="https://player.vimeo.com/api/player.js"></script>
+</body>
+</html>
