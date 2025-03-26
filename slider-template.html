@@ -135,10 +135,23 @@
             slides[currentSlide].classList.remove('active');
             document.querySelectorAll('.slider-dot')[currentSlide].classList.remove('active');
             
+            // Mevcut videoyu durdur
+            const currentVideo = slides[currentSlide].querySelector('video');
+            if (currentVideo) {
+                currentVideo.pause();
+                currentVideo.currentTime = 0;
+            }
+            
             currentSlide = index;
             
             slides[currentSlide].classList.add('active');
             document.querySelectorAll('.slider-dot')[currentSlide].classList.add('active');
+
+            // Yeni slide'daki videoyu başlat
+            const newVideo = slides[currentSlide].querySelector('video');
+            if (newVideo) {
+                newVideo.play();
+            }
         }
 
         // Sonraki slide'a git
@@ -218,6 +231,13 @@
 
         // Başlangıç ayarları
         createDots();
+        
+        // İlk slide'daki videoyu başlat (eğer varsa)
+        const firstVideo = slides[0].querySelector('video');
+        if (firstVideo) {
+            firstVideo.play();
+        }
+        
         startSlideInterval();
     </script>
 </body>
