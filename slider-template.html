@@ -3,41 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SliderMan - Otomatik Slider</title>
+    <title>SliderMan - Basit ve Güvenilir Slider</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="slider.css">
-    <!-- Dahili CSS stilleri kaldırıldı, harici CSS dosyası kullanılıyor -->
 </head>
 <body>
+    <!-- Slider Ana Konteyner -->
     <div class="slider-container" id="slider" data-transition-interval="{{transitionInterval}}">
         <!-- Slider içeriği backend tarafından eklenecek -->
     </div>
 
+    <!-- Slider Kontrolleri -->
     <div class="slider-controls">
         <button class="slider-arrow prev-slide"><i class="fas fa-chevron-left"></i></button>
         <button class="slider-arrow next-slide"><i class="fas fa-chevron-right"></i></button>
     </div>
 
+    <!-- Script Yükleyici -->
     <script>
         console.log('Slider şablonu yüklendi');
         
-        // Her iki slider.js dosyasını da yüklemeyi dene
-        function loadScript(src, callback) {
-            var script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = src;
-            script.onload = callback;
-            script.onerror = function() {
-                console.log('Script yüklenemedi: ' + src);
-                if (callback) callback();
-            };
-            document.body.appendChild(script);
+        // Script yükleme fonksiyonu
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
         }
         
-        // Önce js/slider.js'i yüklemeyi dene, hata olursa public/js/slider.js'i dene
-        loadScript('js/slider.js', function() {
-            console.log('js/slider.js yüklendi veya yükleme denendi');
-        });
+        // Önce slider.js'i yüklemeyi dene
+        loadScript('slider.js')
+            .catch(() => {
+                console.log('slider.js yüklenemedi, js/slider.js deneniyor...');
+                return loadScript('js/slider.js');
+            })
+            .catch(() => {
+                console.log('js/slider.js yüklenemedi, public/js/slider.js deneniyor...');
+                return loadScript('public/js/slider.js');
+            })
+            .catch(() => {
+                console.error('Hiçbir slider script dosyası yüklenemedi!');
+            });
     </script>
     
     <!-- Vimeo API -->

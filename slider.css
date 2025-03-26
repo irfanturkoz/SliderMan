@@ -1,29 +1,35 @@
-/* SliderMan - Tamamen Yeniden Yazılmış CSS */
-html, body {
+/* 
+ * SliderMan - Ultra Basit CSS
+ * Resimlerin iç içe geçme sorunu tamamen çözüldü
+ */
+
+/* Temel Reset */
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+/* Sayfa Yapısı */
+html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
     position: fixed;
     font-family: Arial, sans-serif;
-    background-color: #000; /* Siyah arka plan */
+    background-color: #000;
 }
 
-/* Slider Container */
+/* Slider Ana Konteyner */
 .slider-container {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #000; /* Siyah arka plan */
-    z-index: 1;
+    background-color: #000;
 }
 
-/* Slider Slides - Hem slider-slide hem de slider-item sınıflarını destekler */
+/* Slider Slide'ları */
 .slider-slide, .slider-item {
     position: absolute;
     top: 0;
@@ -31,40 +37,29 @@ html, body {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    visibility: hidden;
+    transition: opacity 1s ease;
+    background-color: #000;
     z-index: 1;
-    background-color: #000; /* Siyah arka plan */
 }
 
 /* Aktif Slide */
 .slider-slide.active, .slider-item.active {
     opacity: 1;
-    z-index: 10;
+    visibility: visible;
+    z-index: 2;
 }
 
-/* Resimler */
-.slider-image, img {
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
+/* Medya Elemanları (Resim ve Video) */
+.slider-slide img, .slider-item img,
+.slider-slide video, .slider-item video,
+.slider-image, .slider-video {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 5;
-}
-
-/* Videolar */
-.slider-video, video {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 5;
 }
 
 /* YouTube ve Vimeo Videoları */
@@ -72,7 +67,6 @@ html, body {
     width: 100%;
     height: 100%;
     border: none;
-    z-index: 5;
 }
 
 /* Slider Kontrolleri */
@@ -81,58 +75,51 @@ html, body {
     top: 50%;
     left: 0;
     width: 100%;
+    transform: translateY(-50%);
     display: flex;
     justify-content: space-between;
-    z-index: 20; /* Kontroller her zaman en üstte */
-    transform: translateY(-50%);
     padding: 0 20px;
-    pointer-events: none; /* Kontrol container'ı tıklanamaz, sadece butonlar tıklanabilir */
+    z-index: 10;
+    pointer-events: none;
 }
 
-/* Sağdaki buton için özel stil */
-.next-slide {
-    margin-right: 40px; /* Sağdan içeri doğru 40px kaydırma */
-}
-
-/* Slider Okları */
+/* Slider Ok Butonları */
 .slider-arrow {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
     font-size: 24px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
     cursor: pointer;
-    pointer-events: auto; /* Butonlar tıklanabilir */
-    transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
+    pointer-events: auto;
     opacity: 0.7;
-    z-index: 30; /* Butonlar her zaman en üstte */
+    z-index: 10;
 }
 
+/* Sağ Ok Butonu */
+.next-slide {
+    margin-right: 20px;
+}
+
+/* Ok Butonları Hover Efekti */
 .slider-arrow:hover {
     background-color: rgba(0, 0, 0, 0.8);
     transform: scale(1.1);
     opacity: 1;
 }
 
-.slider-container:hover .slider-arrow {
-    opacity: 0.9;
-}
-
-/* Responsive tasarım için medya sorguları */
+/* Responsive Tasarım */
 @media (max-width: 768px) {
     .slider-arrow {
         width: 40px;
         height: 40px;
         font-size: 18px;
-    }
-    
-    .slider-controls {
-        padding: 0 10px;
     }
 }
 
