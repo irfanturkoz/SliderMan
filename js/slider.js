@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Slider'ı başlat
     function initSlider() {
-        // Slide'ları topla
-        slides = document.querySelectorAll('.slider-slide');
+        // Slide'ları topla - hem slider-slide hem de slider-item sınıflarını kontrol et
+        slides = document.querySelectorAll('.slider-slide, .slider-item');
         
         if (slides.length === 0) {
             console.log('SliderMan: Hiç slide bulunamadı, 500ms sonra tekrar denenecek');
