@@ -50,6 +50,10 @@ const port = process.env.PORT || 10000;
 // Sunucuyu başlat
 app.listen(port, () => {
     console.log(`Server ${port} portunda çalışıyor`);
-    console.log('Frontend: http://localhost:8080');
-    console.log('Backend: http://localhost:3000');
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Production modunda çalışıyor');
+    } else {
+        console.log('Frontend: http://localhost:8080');
+        console.log('Backend: http://localhost:' + port);
+    }
 });
