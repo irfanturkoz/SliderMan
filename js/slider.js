@@ -82,49 +82,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Video varsa
             console.log('Video slide aktif edildi');
             video.currentTime = 0;
-            video.muted = true; // Videoyu sessiz yap
+            video.muted = true; // Videoyu sessiz tut
             
-            // Video oynatma butonunu ekle
-            const playButton = document.createElement('button');
-            playButton.className = 'video-play-button';
-            playButton.innerHTML = '<i class="fas fa-play"></i>';
-            playButton.style.position = 'absolute';
-            playButton.style.top = '50%';
-            playButton.style.left = '50%';
-            playButton.style.transform = 'translate(-50%, -50%)';
-            playButton.style.fontSize = '48px';
-            playButton.style.color = 'white';
-            playButton.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            playButton.style.border = 'none';
-            playButton.style.borderRadius = '50%';
-            playButton.style.width = '80px';
-            playButton.style.height = '80px';
-            playButton.style.cursor = 'pointer';
-            playButton.style.zIndex = '10';
-            
-            // Varsa önceki play butonunu kaldır
-            const existingButton = activeSlide.querySelector('.video-play-button');
-            if (existingButton) {
-                existingButton.remove();
-            }
-            
-            activeSlide.appendChild(playButton);
-            
-            // Play butonuna tıklama olayı ekle
-            playButton.addEventListener('click', function() {
-                video.play()
-                    .then(() => {
-                        console.log('Video manuel olarak oynatılıyor');
-                        playButton.style.display = 'none'; // Butonu gizle
-                    })
-                    .catch(err => {
-                        console.error('Video oynatma hatası:', err);
-                    });
-            });
+            // Videoyu otomatik başlat
+            video.play()
+                .then(() => {
+                    console.log('Video otomatik olarak başlatıldı');
+                })
+                .catch(err => {
+                    console.error('Video oynatma hatası:', err);
+                    // Video oynatılamazsa, bir sonraki slide'a geç
+                    slideTimer = setTimeout(nextSlide, transitionInterval);
+                });
 
             // Video bittiğinde sonraki slide'a geç
             video.onended = function() {
                 console.log('Video bitti, sonraki slide\'a geçiliyor');
+                clearSlideTimer(); // Slide timerı temizle
                 nextSlide();
             };
             

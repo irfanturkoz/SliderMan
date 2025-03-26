@@ -105,7 +105,7 @@ function createHtmlTemplate(page) {
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
-                    <video class="slider-video" muted playsinline>
+                    <video class="slider-video" autoplay muted playsinline>
                         <source src="${videoUrl}" type="${video.mimetype || 'video/mp4'}">
                     </video>
                 </div>`;
