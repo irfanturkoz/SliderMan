@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Statik dosyaları serve et
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // MongoDB bağlantısı
 mongoose.connect(process.env.MONGODB_URI, {
@@ -40,7 +40,7 @@ app.use('/api/pages', require('./routes/pages'));
 
 // HTML dosyalarını serve et
 app.get('*.html', (req, res) => {
-    const filePath = path.join(__dirname, '..', req.path);
+    const filePath = path.join(__dirname, '..', 'public', req.path);
     console.log('HTML dosyası isteniyor:', filePath);
     
     if (fs.existsSync(filePath)) {
@@ -65,7 +65,7 @@ app.listen(port, () => {
     console.log(`Server ${port} portunda çalışıyor`);
     if (process.env.NODE_ENV === 'production') {
         console.log('Production modunda çalışıyor');
-        console.log('HTML dosyaları:', path.join(__dirname, '..'));
+        console.log('HTML dosyaları:', path.join(__dirname, '..', 'public'));
     } else {
         console.log('Frontend: http://localhost:8080');
         console.log('Backend: http://localhost:' + port);

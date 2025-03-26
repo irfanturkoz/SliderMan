@@ -237,7 +237,13 @@ router.post('/', auth, upload.fields([
 
         // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
+        
+        // public klasörünü oluştur
+        const publicDir = path.join(__dirname, '..', '..', 'public');
+        if (!fs.existsSync(publicDir)) {
+            fs.mkdirSync(publicDir, { recursive: true });
+        }
         
         // HTML dosyasını oluştur
         fs.writeFileSync(htmlFilePath, htmlContent);
