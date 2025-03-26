@@ -334,6 +334,19 @@ function updateMediaList(images = [], videos = []) {
         if (media.type === 'image') {
             // URL'yi kontrol et ve düzelt
             mediaUrl = media.url;
+            if (!mediaUrl) {
+                // URL yoksa filename kullanarak oluştur
+                if (media.filename) {
+                    mediaUrl = `/uploads/pages/${media.filename}`;
+                }
+            }
+            
+            // Eğer URL hala yoksa veya geçersizse
+            if (!mediaUrl || mediaUrl === 'undefined') {
+                mediaUrl = '/img/no-image.png'; // Varsayılan resim
+            }
+            
+            // URL'nin doğru formatta olduğundan emin ol
             if (mediaUrl && !mediaUrl.startsWith('http') && !mediaUrl.startsWith('/')) {
                 mediaUrl = '/' + mediaUrl;
             }
@@ -352,6 +365,19 @@ function updateMediaList(images = [], videos = []) {
         } else if (media.type === 'video') {
             // URL'yi kontrol et ve düzelt
             mediaUrl = media.url;
+            if (!mediaUrl) {
+                // URL yoksa filename kullanarak oluştur
+                if (media.filename) {
+                    mediaUrl = `/uploads/pages/${media.filename}`;
+                }
+            }
+            
+            // Eğer URL hala yoksa veya geçersizse
+            if (!mediaUrl || mediaUrl === 'undefined') {
+                mediaUrl = '/img/no-video.png'; // Varsayılan video önizleme
+            }
+            
+            // URL'nin doğru formatta olduğundan emin ol
             if (mediaUrl && !mediaUrl.startsWith('http') && !mediaUrl.startsWith('/')) {
                 mediaUrl = '/' + mediaUrl;
             }
@@ -664,6 +690,122 @@ async function deleteMedia(mediaId, mediaType) {
         console.error('Medya silme hatası:', error);
         showAlert('danger', 'Medya silinirken bir hata oluştu: ' + error.message);
     }
+}
+
+// Dosya yükleme
+async function uploadFiles(pageId, formData) {
+    try {
+        console.log(`Dosyalar yükleniyor. Sayfa ID: ${pageId}`);
+        
+        const response = await fetch(`${API_URL}/pages/${pageId}/media`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Dosya yükleme hatası:', response.status, errorText);
+            throw new Error(`Dosya yükleme hatası. Durum: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Dosya yükleme sonucu:', result);
+        
+        // Yükleme başarılı olduysa sayfayı yeniden yükle
+        if (result.success) {
+            await loadPage(pageId);
+            showAlert('success', 'Dosyalar başarıyla yüklendi');
+        } else {
+            showAlert('danger', result.message || 'Dosya yükleme hatası');
+        }
+        
+    } catch (error) {
+        console.error('Dosya yükleme hatası:', error);
+        showAlert('danger', 'Dosya yükleme hatası: ' + error.message);
+    }
+}
+
+// Dosya önizleme
+function handleFilePreview(fileInput, previewElement) {
+    if (!fileInput || !previewElement) {
+        console.error('Dosya önizleme için gerekli elementler bulunamadı');
+        return;
+    }
+    
+    fileInput.addEventListener('change', function() {
+        // Önizleme alanını temizle
+        previewElement.innerHTML = '';
+        
+        if (this.files && this.files.length > 0) {
+            console.log(`${this.files.length} dosya seçildi`);
+            
+            // Her dosya için önizleme oluştur
+            Array.from(this.files).forEach(file => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                
+                // Dosya türüne göre önizleme oluştur
+                if (file.type.startsWith('image/')) {
+                    // Resim dosyası
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewItem.innerHTML = `
+                            <div class="preview-image">
+                                <img src="${e.target.result}" alt="${file.name}" class="img-thumbnail">
+                            </div>
+                            <div class="preview-info">
+                                <span class="preview-name">${file.name}</span>
+                                <span class="preview-size">${formatFileSize(file.size)}</span>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    // Video dosyası
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewItem.innerHTML = `
+                            <div class="preview-video">
+                                <video controls>
+                                    <source src="${e.target.result}" type="${file.type}">
+                                </video>
+                            </div>
+                            <div class="preview-info">
+                                <span class="preview-name">${file.name}</span>
+                                <span class="preview-size">${formatFileSize(file.size)}</span>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Diğer dosya türleri
+                    previewItem.innerHTML = `
+                        <div class="preview-file">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="preview-info">
+                            <span class="preview-name">${file.name}</span>
+                            <span class="preview-size">${formatFileSize(file.size)}</span>
+                        </div>
+                    `;
+                }
+                
+                previewElement.appendChild(previewItem);
+            });
+        }
+    });
+}
+
+// Dosya boyutunu formatla
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // Form gösterme/gizleme ve sayfa başına kaydırma
