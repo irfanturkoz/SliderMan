@@ -1,4 +1,4 @@
-/* SliderMan CSS - Tamamen yeniden düzenlenmiş sürüm */
+/* SliderMan CSS - Basitleştirilmiş ve Güvenilir Sürüm */
 
 * {
     margin: 0;
@@ -25,6 +25,7 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background-color: #000;
 }
 
 /* Slide temel stilleri */
@@ -36,14 +37,13 @@ body {
     height: 100%;
     opacity: 0;
     transition: opacity 1s ease;
-    z-index: 0;
     display: none; /* Varsayılan olarak gizli */
     background-color: #000;
+    overflow: hidden;
 }
 
 /* Aktif slide stilleri */
 .slider-slide.active {
-    z-index: 10;
     opacity: 1;
     display: block; /* Aktif olduğunda görünür */
 }
@@ -56,7 +56,6 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1;
 }
 
 /* Video stilleri */
@@ -67,7 +66,6 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1;
 }
 
 /* Kontrol butonları */
@@ -78,9 +76,9 @@ body {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    z-index: 20; /* Slide'ların üzerinde */
     transform: translateY(-50%);
     padding: 0 20px;
+    z-index: 100; /* En üstte */
 }
 
 .slider-arrow {
@@ -96,7 +94,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: background-color 0.3s;
-    z-index: 30; /* En üstte */
+    z-index: 100; /* En üstte */
 }
 
 .slider-arrow:hover {
