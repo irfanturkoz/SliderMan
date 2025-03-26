@@ -188,7 +188,10 @@ async function loadPages() {
                     .replace(/^-|-$/g, '');
                 
                 // HTML sayfasını yeni sekmede aç
-                window.open(`${safeFileName}.html`, '_blank');
+                const backendUrl = window.location.hostname.includes('localhost') 
+                    ? `http://localhost:10000`
+                    : `https://sliderman-backend.onrender.com`;
+                window.open(`${backendUrl}/${safeFileName}.html`, '_blank');
             });
             
             // Silme butonuna tıklama olayı
