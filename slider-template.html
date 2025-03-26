@@ -47,6 +47,9 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .slider-controls {
@@ -163,7 +166,21 @@
 
         // Otomatik geçiş aralığını başlat
         function startSlideInterval() {
-            slideInterval = setInterval(nextSlide, {{transitionInterval}});
+            slideInterval = setInterval(() => {
+                const currentItem = slides[currentSlide];
+                const isVideo = currentItem.querySelector('video');
+                
+                if (isVideo) {
+                    // Eğer video varsa, video bittiğinde sonraki slide'a geç
+                    const video = currentItem.querySelector('video');
+                    video.onended = () => {
+                        nextSlide();
+                    };
+                } else {
+                    // Resim ise normal geçiş yap
+                    nextSlide();
+                }
+            }, 20000); // 20 saniye
         }
 
         // Klavye kontrollerini ekle
