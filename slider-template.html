@@ -5,142 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SliderMan - Otomatik Slider</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: fixed;
-            font-family: Arial, sans-serif;
-        }
-        
-        .slider-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .slider-slide {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 0;
-        }
-        
-        .slider-slide.active {
-            opacity: 1;
-            z-index: 1;
-        }
-        
-        .slider-image {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        
-        .slider-video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        
-        video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-        }
-        
-        .youtube-video, .vimeo-video {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .slider-controls {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            z-index: 10;
-            transform: translateY(-50%);
-            padding: 0 20px;
-        }
-        
-        /* Sağdaki buton için özel stil */
-        .next-slide {
-            margin-right: 40px; /* Sağdan içeri doğru 40px kaydırma */
-        }
-        
-        .slider-arrow {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            font-size: 24px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: auto;
-            transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.7;
-            z-index: 20;
-        }
-        
-        .slider-arrow:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-            transform: scale(1.1);
-            opacity: 1;
-        }
-        
-        .slider-container:hover .slider-arrow {
-            opacity: 0.9;
-        }
-        
-        /* Responsive tasarım için medya sorguları */
-        @media (max-width: 768px) {
-            .slider-arrow {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            
-            .slider-controls {
-                padding: 0 10px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .slider-arrow {
-                width: 35px;
-                height: 35px;
-                font-size: 16px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="slider.css">
+    <!-- Dahili CSS stilleri kaldırıldı, harici CSS dosyası kullanılıyor -->
 </head>
 <body>
     <div class="slider-container" id="slider" data-transition-interval="{{transitionInterval}}">
@@ -154,8 +20,25 @@
 
     <script>
         console.log('Slider şablonu yüklendi');
+        
+        // Her iki slider.js dosyasını da yüklemeyi dene
+        function loadScript(src, callback) {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = src;
+            script.onload = callback;
+            script.onerror = function() {
+                console.log('Script yüklenemedi: ' + src);
+                if (callback) callback();
+            };
+            document.body.appendChild(script);
+        }
+        
+        // Önce js/slider.js'i yüklemeyi dene, hata olursa public/js/slider.js'i dene
+        loadScript('js/slider.js', function() {
+            console.log('js/slider.js yüklendi veya yükleme denendi');
+        });
     </script>
-    <script src="js/slider.js"></script>
     
     <!-- Vimeo API -->
     <script src="https://player.vimeo.com/api/player.js"></script>
