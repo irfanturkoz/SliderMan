@@ -187,7 +187,35 @@ router.get('/:id', auth, async (req, res) => {
         const transitionInterval = parseInt(req.query.transitionInterval) || 20000;
         page.transitionInterval = transitionInterval;
         
-        res.json({ success: true, page });
+        // Medya URL'lerini düzelt
+        const pageObj = page.toObject();
+        
+        // API URL'sini belirle
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://sliderman-backend.onrender.com' 
+            : 'http://localhost:10000';
+        
+        // Resimlerin URL'lerini düzelt
+        if (pageObj.images && pageObj.images.length > 0) {
+            pageObj.images = pageObj.images.map(img => {
+                if (img.filename && (!img.url || img.url.startsWith('/'))) {
+                    img.url = `${baseUrl}/uploads/pages/${img.filename}`;
+                }
+                return img;
+            });
+        }
+        
+        // Videoların URL'lerini düzelt
+        if (pageObj.videos && pageObj.videos.length > 0) {
+            pageObj.videos = pageObj.videos.map(video => {
+                if (video.filename && (!video.url || video.url.startsWith('/'))) {
+                    video.url = `${baseUrl}/uploads/pages/${video.filename}`;
+                }
+                return video;
+            });
+        }
+        
+        res.json({ success: true, page: pageObj });
     } catch (error) {
         console.error('Sayfa detayı hatası:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -198,7 +226,40 @@ router.get('/:id', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
     try {
         const pages = await Page.find({}).sort({ createdAt: -1 });
-        res.json({ success: true, pages });
+        
+        // API URL'sini belirle
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://sliderman-backend.onrender.com' 
+            : 'http://localhost:10000';
+        
+        // Sayfaları düzelt
+        const pagesObj = pages.map(page => {
+            const pageObj = page.toObject();
+            
+            // Resimlerin URL'lerini düzelt
+            if (pageObj.images && pageObj.images.length > 0) {
+                pageObj.images = pageObj.images.map(img => {
+                    if (img.filename && (!img.url || img.url.startsWith('/'))) {
+                        img.url = `${baseUrl}/uploads/pages/${img.filename}`;
+                    }
+                    return img;
+                });
+            }
+            
+            // Videoların URL'lerini düzelt
+            if (pageObj.videos && pageObj.videos.length > 0) {
+                pageObj.videos = pageObj.videos.map(video => {
+                    if (video.filename && (!video.url || video.url.startsWith('/'))) {
+                        video.url = `${baseUrl}/uploads/pages/${video.filename}`;
+                    }
+                    return video;
+                });
+            }
+            
+            return pageObj;
+        });
+        
+        res.json({ success: true, pages: pagesObj });
     } catch (error) {
         console.error('Sayfa listesi hatası:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -217,26 +278,38 @@ router.post('/', auth, upload.fields([
             return res.status(400).json({ success: false, message: 'Sayfa adı gereklidir.' });
         }
 
-        // Yüklenen dosyaları ekle
-        const images = [
-            ...(req.files?.images || []).map(file => ({
-                type: 'file',
-                filename: file.filename,
-                originalname: file.originalname,
-                url: `/uploads/pages/${file.filename}`,
-                index: 0
-            }))
-        ];
+        // API URL'sini belirle
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://sliderman-backend.onrender.com' 
+            : 'http://localhost:10000';
 
-        const videos = [
-            ...(req.files?.videos || []).map(file => ({
-                type: 'file',
-                filename: file.filename,
-                originalname: file.originalname,
-                url: `/uploads/pages/${file.filename}`,
-                index: 0
-            }))
-        ];
+        // Yüklenen dosyaları ekle
+        const images = [];
+        const videos = [];
+
+        if (req.files?.images) {
+            req.files.images.forEach((file, index) => {
+                images.push({
+                    type: 'file',
+                    filename: file.filename,
+                    originalname: file.originalname,
+                    url: `${baseUrl}/uploads/pages/${file.filename}`,
+                    index
+                });
+            });
+        }
+
+        if (req.files?.videos) {
+            req.files.videos.forEach((file, index) => {
+                videos.push({
+                    type: 'file',
+                    filename: file.filename,
+                    originalname: file.originalname,
+                    url: `${baseUrl}/uploads/pages/${file.filename}`,
+                    index
+                });
+            });
+        }
 
         const page = new Page({
             name: name.trim(),
@@ -314,13 +387,18 @@ router.put('/:id', auth, upload.fields([
             page.name = name.trim();
         }
 
+        // API URL'sini belirle
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://sliderman-backend.onrender.com' 
+            : 'http://localhost:10000';
+
         // Yüklenen yeni dosyaları ekle
         if (req.files?.images) {
             const newImages = req.files.images.map(file => ({
                 type: 'file',
                 filename: file.filename,
                 originalname: file.originalname,
-                url: `/uploads/pages/${file.filename}`,
+                url: `${baseUrl}/uploads/pages/${file.filename}`,
                 index: page.images.length
             }));
             
@@ -332,7 +410,7 @@ router.put('/:id', auth, upload.fields([
                 type: 'file',
                 filename: file.filename,
                 originalname: file.originalname,
-                url: `/uploads/pages/${file.filename}`,
+                url: `${baseUrl}/uploads/pages/${file.filename}`,
                 index: page.videos.length
             }));
             
@@ -603,7 +681,7 @@ router.post('/:id/images', auth, upload.single('image'), async (req, res) => {
         // Resim bilgilerini ekle
         const imageData = {
             type: 'local',
-            url: `/uploads/${req.file.filename}`,
+            url: `https://sliderman-backend.onrender.com/uploads/pages/${req.file.filename}`,
             filename: req.file.filename,
             originalname: req.file.originalname,
             order: newOrder
