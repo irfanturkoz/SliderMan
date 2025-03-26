@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let slideTimer = null;
     
     // Geçiş süresini HTML'den al
-    let transitionInterval = 5000; // Varsayılan değer: 5 saniye
+    let transitionInterval = 20000; // Varsayılan değer: 20 saniye
     
     if (slider && slider.dataset.transitionInterval) {
-        transitionInterval = parseInt(slider.dataset.transitionInterval) || 5000;
+        transitionInterval = parseInt(slider.dataset.transitionInterval) || 20000;
     }
     
     console.log('Slider geçiş süresi:', transitionInterval, 'ms');
@@ -141,7 +141,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // Resim varsa transitionInterval süresi sonra geç
             console.log('Resim slide aktif edildi, ' + transitionInterval + 'ms sonra geçilecek');
-            slideTimer = setTimeout(nextSlide, transitionInterval);
+            
+            // Önceki zamanlayıcıyı temizle ve yeni bir zamanlayıcı oluştur
+            clearSlideTimer();
+            slideTimer = setTimeout(function() {
+                console.log('Resim süresi doldu, sonraki slide\'a geçiliyor');
+                nextSlide();
+            }, transitionInterval);
         }
     }
 
