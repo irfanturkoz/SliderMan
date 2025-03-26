@@ -1,5 +1,5 @@
-/* Slider Stilleri */
 * {
+    /* Slider Stilleri */
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -16,6 +16,7 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    background-color: #000;
 }
 
 .slider {
@@ -162,6 +163,74 @@ video::-ms-tooltip {
 
 .slider-dot.active {
     background-color: #fff;
+}
+
+.slider-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: 0;
+}
+
+.slider-slide.active {
+    opacity: 1;
+    z-index: 10;
+}
+
+.slider-slide img, .slider-slide video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+}
+
+.slider-controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+}
+
+.slider-control {
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    margin: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+    z-index: 30;
+}
+
+.slider-control:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* Responsive ayarlar */
+@media (max-width: 768px) {
+    .slider-control {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        margin: 0 10px;
+    }
 }
 
 /* Font Awesome için geçici çözüm */
