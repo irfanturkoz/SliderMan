@@ -57,24 +57,58 @@ document.addEventListener('DOMContentLoaded', function() {
         // Önceki zamanlayıcıyı temizle
         clearSlideTimer();
 
-        // Tüm slide'ları deaktif et ve videoları durdur
-        slides.forEach(slide => {
-            slide.classList.remove('active');
-            const video = slide.querySelector('video');
-            if (video) {
+        // Geçiş sırasında olduğumuzu belirt
+        let isTransitioning = false;
+
+        // Aktif slide'ı bul
+        const currentActiveSlide = document.querySelector('.slider-slide.active');
+        
+        // Eğer zaten bir aktif slide varsa, geçiş efekti uygula
+        if (currentActiveSlide) {
+            isTransitioning = true;
+            
+            // Önce tüm videoları durdur
+            const videos = document.querySelectorAll('video');
+            videos.forEach(video => {
                 video.pause();
                 video.currentTime = 0;
                 video.onended = null;
-            }
-        });
+            });
+            
+            // Geçiş efekti: Önce mevcut slide'ı yavaşça kapat
+            currentActiveSlide.style.transition = 'opacity 1s ease-out';
+            currentActiveSlide.style.opacity = '0';
+            
+            // Geçiş tamamlandıktan sonra yeni slide'ı göster
+            setTimeout(() => {
+                // Tüm slide'ları deaktif et
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                
+                // Yeni slide'ı aktif et
+                slides[index].classList.add('active');
+                slides[index].style.transition = 'opacity 1s ease-in';
+                slides[index].style.opacity = '1';
+                
+                // Aktif slide'daki medyayı başlat
+                activateSlideMedia(index);
+                
+                isTransitioning = false;
+            }, 1000); // 1 saniye geçiş süresi
+        } else {
+            // İlk yükleme - doğrudan aktif et
+            slides[index].classList.add('active');
+            slides[index].style.opacity = '1';
+            activateSlideMedia(index);
+        }
         
-        // Yeni slide'ı aktif et
-        slides[index].classList.add('active');
         currentSlide = index;
-        
         console.log('Aktif slide değişti:', index);
-
-        // Aktif slide'daki medyayı başlat
+    }
+    
+    // Slide medyasını aktifleştir (video veya resim)
+    function activateSlideMedia(index) {
         const activeSlide = slides[index];
         const video = activeSlide.querySelector('video');
         
