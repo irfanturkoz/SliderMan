@@ -45,6 +45,8 @@ app.get('*.html', (req, res) => {
     const fileName = req.path.substring(1); // Başındaki / karakterini kaldır
     const filePath = path.join(__dirname, '..', 'public', fileName);
     console.log('HTML dosyası isteniyor:', filePath);
+    console.log('İstek URL:', req.url);
+    console.log('İstek path:', req.path);
     
     if (fs.existsSync(filePath)) {
         console.log('HTML dosyası bulundu, gönderiliyor...');
@@ -52,6 +54,19 @@ app.get('*.html', (req, res) => {
     } else {
         console.log('HTML dosyası bulunamadı:', filePath);
         console.log('Mevcut dosyalar:', fs.readdirSync(path.join(__dirname, '..', 'public')).join(', '));
+        
+        // Alternatif yolları dene
+        const altPath1 = path.join(__dirname, '..', fileName);
+        const altPath2 = path.join(__dirname, '..', '..', fileName);
+        
+        if (fs.existsSync(altPath1)) {
+            console.log('Alternatif yolda bulundu (1):', altPath1);
+            return res.sendFile(altPath1);
+        } else if (fs.existsSync(altPath2)) {
+            console.log('Alternatif yolda bulundu (2):', altPath2);
+            return res.sendFile(altPath2);
+        }
+        
         res.status(404).send('Sayfa bulunamadı');
     }
 });
@@ -59,6 +74,30 @@ app.get('*.html', (req, res) => {
 // Kök yolu için yönlendirme
 app.get('/', (req, res) => {
     res.send('SliderMan Backend API - <a href="/api/pages">Sayfaları Görüntüle</a>');
+});
+
+// Tüm diğer HTML istekleri için
+app.get('/:pageName', (req, res) => {
+    const pageName = req.params.pageName;
+    
+    // Eğer .html ile bitmiyorsa ve bir dosya adı gibi görünüyorsa
+    if (!pageName.includes('.') || pageName.endsWith('.html')) {
+        const fileName = pageName.endsWith('.html') ? pageName : `${pageName}.html`;
+        const filePath = path.join(__dirname, '..', 'public', fileName);
+        
+        console.log('Sayfa isteniyor:', filePath);
+        
+        if (fs.existsSync(filePath)) {
+            console.log('Sayfa bulundu, gönderiliyor...');
+            return res.sendFile(filePath);
+        } else {
+            console.log('Sayfa bulunamadı:', filePath);
+            console.log('Mevcut dosyalar:', fs.readdirSync(path.join(__dirname, '..', 'public')).join(', '));
+        }
+    }
+    
+    // Eğer bulunamazsa 404 döndür
+    res.status(404).send('Sayfa bulunamadı');
 });
 
 // Hata yakalama middleware

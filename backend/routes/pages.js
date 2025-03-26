@@ -330,14 +330,33 @@ router.post('/', auth, upload.fields([
         if (process.env.NODE_ENV === 'production') {
             // Render platformunda root dizini kullan
             publicDir = path.join(__dirname, '..', '..', 'public');
+            console.log('Production ortamında public dizini:', publicDir);
+            // Render'da dizin yapısını kontrol et
+            try {
+                const rootDir = path.join(__dirname, '..', '..');
+                console.log('Root dizin içeriği:', fs.readdirSync(rootDir).join(', '));
+                
+                if (fs.existsSync(path.join(rootDir, 'public'))) {
+                    console.log('Public dizini içeriği:', fs.readdirSync(path.join(rootDir, 'public')).join(', '));
+                } else {
+                    console.log('Public dizini bulunamadı, oluşturuluyor...');
+                }
+            } catch (err) {
+                console.error('Dizin kontrol hatası:', err);
+            }
         } else {
             // Yerel geliştirme ortamında
             publicDir = path.join(__dirname, '..', '..', 'public');
         }
         
         // Klasörün varlığını kontrol et ve gerekirse oluştur
-        if (!fs.existsSync(publicDir)) {
-            fs.mkdirSync(publicDir, { recursive: true });
+        try {
+            if (!fs.existsSync(publicDir)) {
+                fs.mkdirSync(publicDir, { recursive: true });
+                console.log(`Public dizini oluşturuldu: ${publicDir}`);
+            }
+        } catch (err) {
+            console.error('Public dizini oluşturma hatası:', err);
         }
         
         // HTML dosya yolunu belirle
@@ -351,6 +370,8 @@ router.post('/', auth, upload.fields([
         const htmlUrl = process.env.NODE_ENV === 'production'
             ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
             : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
+        
+        console.log(`HTML URL'si oluşturuldu: ${htmlUrl}`);
 
         res.status(201).json({ 
             success: true, 
@@ -430,14 +451,33 @@ router.put('/:id', auth, upload.fields([
         if (process.env.NODE_ENV === 'production') {
             // Render platformunda root dizini kullan
             publicDir = path.join(__dirname, '..', '..', 'public');
+            console.log('Production ortamında public dizini:', publicDir);
+            // Render'da dizin yapısını kontrol et
+            try {
+                const rootDir = path.join(__dirname, '..', '..');
+                console.log('Root dizin içeriği:', fs.readdirSync(rootDir).join(', '));
+                
+                if (fs.existsSync(path.join(rootDir, 'public'))) {
+                    console.log('Public dizini içeriği:', fs.readdirSync(path.join(rootDir, 'public')).join(', '));
+                } else {
+                    console.log('Public dizini bulunamadı, oluşturuluyor...');
+                }
+            } catch (err) {
+                console.error('Dizin kontrol hatası:', err);
+            }
         } else {
             // Yerel geliştirme ortamında
             publicDir = path.join(__dirname, '..', '..', 'public');
         }
         
         // Klasörün varlığını kontrol et ve gerekirse oluştur
-        if (!fs.existsSync(publicDir)) {
-            fs.mkdirSync(publicDir, { recursive: true });
+        try {
+            if (!fs.existsSync(publicDir)) {
+                fs.mkdirSync(publicDir, { recursive: true });
+                console.log(`Public dizini oluşturuldu: ${publicDir}`);
+            }
+        } catch (err) {
+            console.error('Public dizini oluşturma hatası:', err);
         }
         
         // HTML dosya yolunu belirle
@@ -446,6 +486,13 @@ router.put('/:id', auth, upload.fields([
         // HTML dosyasını oluştur
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
+
+        // HTML URL'sini oluştur (her iki ortam için de backend URL'sini kullan)
+        const htmlUrl = process.env.NODE_ENV === 'production'
+            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
+            : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
+        
+        console.log(`HTML URL'si oluşturuldu: ${htmlUrl}`);
 
         res.json({ 
             success: true, 
