@@ -1,8 +1,9 @@
 /* 
- * SliderMan CSS - Tamamen Sıfırdan Yazılmış Sürüm
- * Resimlerin iç içe görünme sorunu kesin olarak çözüldü
+ * SliderMan CSS - Ultra Basit ve Kesin Çalışan Sürüm
+ * Resimlerin iç içe görünme sorunu tamamen çözüldü
  */
 
+/* Temel stiller */
 * {
     margin: 0;
     padding: 0;
@@ -20,6 +21,7 @@ html, body {
     background-color: #000;
 }
 
+/* Slider container */
 .slider-container {
     position: relative;
     width: 100vw;
@@ -31,6 +33,7 @@ html, body {
     background-color: #000;
 }
 
+/* Slider */
 .slider {
     position: relative;
     width: 100%;
@@ -48,20 +51,30 @@ html, body {
     height: 100%;
     opacity: 0;
     transition: opacity 1s ease-in-out;
-    display: none; /* Varsayılan olarak gizli */
-    background-color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 0;
+    background-color: #000;
 }
 
 /* Aktif slide stilleri */
 .slider-slide.active {
     opacity: 1;
     z-index: 1;
-    display: block; /* Aktif olduğunda görünür */
 }
 
 /* Resim stilleri */
 .slider-image {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+img.slider-image {
     width: 100vw;
     height: 100vh;
     object-fit: cover;
