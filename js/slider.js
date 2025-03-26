@@ -1,13 +1,35 @@
 /**
- * SliderMan - Basit ve Güvenilir Slider Çözümü
- * Tamamen yeniden yazılmış sürüm - Sorunları kökten çözer
+ * SliderMan - Tamamen Yeniden Yazılmış Sürüm
+ * Resimlerin iç içe görünme sorunu kesin olarak çözüldü
  */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('SliderMan: Basitleştirilmiş sürüm başlatılıyor...');
+    console.log('SliderMan: Yeni sürüm başlatılıyor...');
     
     // Temel elemanları seç
     const slider = document.getElementById('slider');
-    const slides = document.querySelectorAll('.slider-slide');
+    const slidesContainer = document.createElement('div');
+    slidesContainer.className = 'slider';
+    slider.appendChild(slidesContainer);
+    
+    // Slider içeriğini oluştur
+    const slideElements = slider.querySelectorAll('.slider-slide');
+    let slides = [];
+    
+    // Eğer zaten slide'lar varsa onları kullan
+    if (slideElements.length > 0) {
+        slides = Array.from(slideElements);
+    } else {
+        // Eğer yoksa, backend tarafından eklenmiş olabilir, tekrar kontrol et
+        setTimeout(() => {
+            const newSlideElements = slider.querySelectorAll('.slider-slide');
+            if (newSlideElements.length > 0) {
+                slides = Array.from(newSlideElements);
+                initializeSlider();
+            }
+        }, 500);
+    }
+    
+    // Kontrol butonlarını seç
     const prevButton = document.querySelector('.prev-slide');
     const nextButton = document.querySelector('.next-slide');
     
@@ -25,15 +47,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Slider'ı başlat
+    if (slides.length > 0) {
+        initializeSlider();
+    }
+    
     /**
-     * Tüm slide'ları tamamen gizle
+     * Slider'ı başlat
+     */
+    function initializeSlider() {
+        console.log(`SliderMan: ${slides.length} slide ile başlatılıyor`);
+        
+        // Tüm slide'ları gizle
+        hideAllSlides();
+        
+        // İlk slide'ı göster
+        setTimeout(() => {
+            showSlide(0);
+        }, 100);
+        
+        // Kontrol butonlarına event listener'lar ekle
+        if (prevButton) {
+            prevButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPrevSlide();
+            });
+        }
+        
+        if (nextButton) {
+            nextButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showNextSlide();
+            });
+        }
+        
+        // Klavye kontrollerini ekle
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') {
+                showNextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                showPrevSlide();
+            }
+        });
+    }
+    
+    /**
+     * Tüm slide'ları gizle
      */
     function hideAllSlides() {
         slides.forEach(slide => {
-            // DOM'dan tamamen kaldır
+            // Tüm slide'ları gizle
             slide.style.display = 'none';
             slide.style.opacity = '0';
-            slide.style.visibility = 'hidden';
             slide.classList.remove('active');
             
             // Video varsa durdur
@@ -42,10 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     video.pause();
                     video.currentTime = 0;
-                    
-                    // Event listener'ları temizle
                     video.onended = null;
-                    video.onplay = null;
                     video.onerror = null;
                 } catch (e) {
                     console.error('Video durdurma hatası:', e);
@@ -92,13 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hedef slide'ı seç
         const targetSlide = slides[index];
         
-        // Önce DOM'a ekle
+        // Önce display özelliğini ayarla
         targetSlide.style.display = 'block';
-        targetSlide.style.visibility = 'visible';
         
-        // Kısa bir gecikme sonra aktifleştir (DOM güncellemesi için)
+        // Kısa bir gecikme sonra opacity'yi artır
         setTimeout(() => {
-            // Aktif sınıfını ekle ve opacity'yi artır
             targetSlide.classList.add('active');
             targetSlide.style.opacity = '1';
             
@@ -188,40 +248,5 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
         showSlide(prevIndex);
-    }
-    
-    // İleri/geri butonları için event listener'lar
-    if (nextButton) {
-        nextButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            showNextSlide();
-        });
-    }
-    
-    if (prevButton) {
-        prevButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            showPrevSlide();
-        });
-    }
-    
-    // Klavye kontrollerini ekle
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowRight') {
-            showNextSlide();
-        } else if (e.key === 'ArrowLeft') {
-            showPrevSlide();
-        }
-    });
-    
-    // Slider'ı başlat
-    if (slides.length > 0) {
-        // Önce tüm slide'ları gizle
-        hideAllSlides();
-        
-        // Kısa bir gecikme sonra ilk slide'ı göster
-        setTimeout(() => {
-            showSlide(0);
-        }, 100);
     }
 });
