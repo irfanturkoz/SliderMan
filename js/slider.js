@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             slide.classList.remove('active');
             slide.style.opacity = '0';
             slide.style.zIndex = '0';
+            slide.style.visibility = 'hidden'; // Görünürlüğü tamamen kapat
         });
         console.log('SliderMan: Tüm slide\'lar gizlendi');
     }
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const targetSlide = slides[index];
         targetSlide.classList.add('active');
         targetSlide.style.zIndex = '10';
+        targetSlide.style.visibility = 'visible'; // Önce görünürlüğü aç
         
         // Kısa bir gecikme sonra opacity'yi artır (daha akıcı geçiş için)
         setTimeout(() => {

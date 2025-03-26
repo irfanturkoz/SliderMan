@@ -174,20 +174,32 @@ video::-ms-tooltip {
     opacity: 0;
     transition: opacity 1s ease;
     z-index: 0;
+    visibility: hidden;
+    overflow: hidden;
 }
 
 .slider-slide.active {
-    opacity: 1;
     z-index: 10;
+    opacity: 1;
+    visibility: visible;
 }
 
-.slider-slide img, .slider-slide video {
+.slider-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
+}
+
+.slider-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .slider-controls {
