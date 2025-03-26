@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSlide = 0;
     let slideTimer = null;
     let isTransitioning = false;
+    let slideStartTime = 0;
     
     // Geçiş süresini HTML'den al veya varsayılan değeri kullan
     let transitionInterval = 20000; // Varsayılan değer: 20 saniye
@@ -73,12 +74,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Önceki zamanlayıcıyı temizle
+        clearSlideTimer();
+
         // Geçiş durumunu güncelle
         isTransitioning = true;
         console.log('Geçiş başladı, hedef slide:', index);
-
-        // Önceki zamanlayıcıyı temizle
-        clearSlideTimer();
         
         // Tüm videoları durdur
         stopAllVideos();
@@ -90,6 +91,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const targetSlide = slides[index];
         targetSlide.classList.add('active');
         targetSlide.style.zIndex = '10';
+        
+        // Slide başlangıç zamanını kaydet
+        slideStartTime = new Date().getTime();
         
         // Kısa bir gecikme sonra opacity'yi artır (daha akıcı geçiş için)
         setTimeout(() => {
@@ -139,12 +143,32 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleImageSlide() {
         console.log('Resim slide aktif edildi, ' + transitionInterval + 'ms sonra geçilecek');
         
-        // Resim için zamanlayıcı oluştur
+        // Resim için zamanlayıcı oluştur - KESİN OLARAK 20 SANİYE DURMASINI SAĞLA
+        clearSlideTimer(); // Önceki zamanlayıcıyı temizle
+        
         slideTimer = setTimeout(() => {
             console.log('Resim süresi doldu, sonraki slide\'a geçiliyor');
             nextSlide();
         }, transitionInterval);
     }
+    
+    // Zamanlayıcıyı kontrol et (her 5 saniyede bir)
+    function checkTimer() {
+        if (isTransitioning || !slides || slides.length <= 0) return;
+        
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - slideStartTime;
+        
+        // Eğer aktif slide resim ise ve süre aşıldıysa
+        const activeSlide = document.querySelector('.slider-slide.active');
+        if (activeSlide && !activeSlide.querySelector('video') && elapsedTime >= transitionInterval) {
+            console.log('Zamanlayıcı kontrolü: Süre aşıldı, sonraki slide\'a geçiliyor');
+            nextSlide();
+        }
+    }
+    
+    // Periyodik olarak zamanlayıcıyı kontrol et
+    setInterval(checkTimer, 5000);
 
     // Sonraki slide'a geç
     function nextSlide() {
