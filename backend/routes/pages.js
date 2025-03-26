@@ -251,7 +251,7 @@ router.post('/', auth, upload.fields([
 
         // HTML URL'sini oluştur
         const htmlUrl = process.env.NODE_ENV === 'production'
-            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
+            ? `https://sliderman-frontend.onrender.com/${safeFileName}.html`
             : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
 
         res.status(201).json({ 
@@ -321,7 +321,7 @@ router.put('/:id', auth, upload.fields([
 
         // HTML sayfası oluştur
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası oluşturuldu: ${htmlFilePath}`);
@@ -348,7 +348,7 @@ router.delete('/:id', auth, async (req, res) => {
 
         // HTML dosyasını sil
         const safeFileName = createSafeFileName(page.name);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
         if (fs.existsSync(htmlFilePath)) {
             fs.unlinkSync(htmlFilePath);
@@ -426,7 +426,7 @@ router.delete('/:pageId/images/:imageId', auth, async (req, res) => {
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
@@ -478,7 +478,7 @@ router.delete('/:pageId/videos/:videoId', auth, async (req, res) => {
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
@@ -534,7 +534,7 @@ router.post('/update-media-order', auth, async (req, res) => {
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
         const htmlContent = createHtmlTemplate(page);
-        const htmlFilePath = path.join(__dirname, '..', '..', `${safeFileName}.html`);
+        const htmlFilePath = path.join(__dirname, '..', '..', 'public', `${safeFileName}.html`);
         
         fs.writeFileSync(htmlFilePath, htmlContent);
         console.log(`HTML sayfası güncellendi: ${htmlFilePath}`);
