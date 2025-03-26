@@ -84,6 +84,10 @@
                 video.removeAttribute('autoplay');
                 video.autoplay = false;
                 
+                // Loop özelliğini kaldır
+                video.removeAttribute('loop');
+                video.loop = false;
+                
                 // Videoyu durdur ve başa sar
                 video.pause();
                 video.currentTime = 0;
@@ -92,9 +96,9 @@
                 video.onended = null;
                 video.onerror = null;
                 
-                console.log('SliderMan: Video autoplay devre dışı bırakıldı');
+                console.log('SliderMan: Video autoplay ve loop devre dışı bırakıldı');
             } catch (e) {
-                console.error('SliderMan: Video autoplay devre dışı bırakma hatası', e);
+                console.error('SliderMan: Video autoplay ve loop devre dışı bırakma hatası', e);
             }
         });
     }
@@ -202,8 +206,14 @@
         const videos = document.querySelectorAll('video');
         videos.forEach(video => {
             try {
+                // Loop özelliğini kaldır
+                video.removeAttribute('loop');
+                video.loop = false;
+                
+                // Videoyu durdur
                 video.pause();
                 video.currentTime = 0;
+                
                 // Event listener'ları temizle
                 video.onended = null;
                 video.onerror = null;
@@ -222,6 +232,10 @@
         
         // Videoyu sessiz yap
         video.muted = true;
+        
+        // Loop özelliğini kaldır
+        video.removeAttribute('loop');
+        video.loop = false;
         
         // Video bittiğinde sonraki slide'a geç
         video.onended = () => {
