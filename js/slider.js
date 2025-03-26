@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let slideTimer = null;
     let isTransitioning = false;
     let transitionInterval = 20000; // 20 saniye
+    let slideStartTime = 0; // Slide başlangıç zamanı
+    let timerCheckInterval = null; // Zamanlayıcı kontrol aralığı
     
     // Geçiş süresini HTML'den al
     if (slider && slider.dataset.transitionInterval) {
@@ -24,6 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
             transitionInterval = parsedInterval;
         }
     }
+    
+    console.log(`SliderMan: Geçiş süresi ${transitionInterval}ms olarak ayarlandı`);
     
     // Slider'ı başlat
     function initSlider() {
@@ -39,11 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`SliderMan: ${slides.length} slide bulundu`);
         
         // Tüm slide'ları gizle
-        slides.forEach(slide => {
-            slide.style.display = 'none';
-            slide.style.opacity = '0';
-            slide.classList.remove('active');
-        });
+        hideAllSlides();
         
         // İlk slide'ı göster
         if (slides.length > 0) {
@@ -73,12 +73,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 prevSlide();
             }
         });
+        
+        // Zamanlayıcı kontrolü için periyodik kontrol başlat
+        timerCheckInterval = setInterval(checkTimer, 5000); // 5 saniyede bir kontrol et
+    }
+    
+    // Tüm slide'ları gizle
+    function hideAllSlides() {
+        slides.forEach(slide => {
+            slide.style.display = 'none';
+            slide.style.opacity = '0';
+            slide.classList.remove('active');
+            slide.style.zIndex = '0';
+        });
+    }
+    
+    // Zamanlayıcı kontrolü
+    function checkTimer() {
+        if (isTransitioning || !slideStartTime) return;
+        
+        const currentSlide = slides[currentIndex];
+        const isVideo = currentSlide.querySelector('video');
+        
+        // Sadece resim slide'ları için zamanlayıcı kontrolü yap
+        if (!isVideo) {
+            const elapsedTime = Date.now() - slideStartTime;
+            console.log(`SliderMan: Zamanlayıcı kontrolü - Geçen süre: ${elapsedTime}ms / ${transitionInterval}ms`);
+            
+            // Süre dolmuşsa ve hala aynı slide'daysa bir sonraki slide'a geç
+            if (elapsedTime >= transitionInterval) {
+                console.log('SliderMan: Zamanlayıcı süresi doldu, sonraki slide\'a geçiliyor');
+                nextSlide();
+            }
+        }
     }
     
     // Slide gösterme fonksiyonu
     function showSlide(index) {
         // Geçiş sırasında yeni geçişleri engelle
-        if (isTransitioning) return;
+        if (isTransitioning) {
+            console.log('SliderMan: Geçiş sırasında, yeni geçiş isteği engellendi');
+            return;
+        }
         
         // Geçerli bir index değilse işlem yapma
         if (index < 0 || index >= slides.length) return;
@@ -90,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Zamanlayıcıyı temizle
         clearTimeout(slideTimer);
+        slideTimer = null;
         
         // Tüm videoları durdur
         document.querySelectorAll('video').forEach(video => {
@@ -98,66 +135,84 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.currentTime = 0;
                 video.onended = null;
                 video.onerror = null;
-            } catch (e) {}
+            } catch (e) {
+                console.log('SliderMan: Video durdurma hatası', e);
+            }
         });
         
         // Tüm slide'ları gizle
-        slides.forEach(slide => {
-            slide.style.display = 'none';
-            slide.style.opacity = '0';
-            slide.classList.remove('active');
-        });
+        hideAllSlides();
         
         // Hedef slide'ı göster
         const targetSlide = slides[index];
         targetSlide.style.display = 'block';
+        targetSlide.style.zIndex = '10'; // Aktif slide için daha yüksek z-index
         
-        // Kısa bir gecikme sonra görünür yap
+        // Kısa bir gecikme sonra görünür yap (CSS geçişi için)
         setTimeout(() => {
             targetSlide.classList.add('active');
             targetSlide.style.opacity = '1';
             
-            // Geçiş tamamlandıktan sonra
+            // Geçiş tamamlandıktan sonra (CSS transition süresi 1s)
             setTimeout(() => {
                 isTransitioning = false;
                 currentIndex = index;
+                slideStartTime = Date.now(); // Slide başlangıç zamanını kaydet
                 
                 // Video mu resim mi kontrol et
                 const video = targetSlide.querySelector('video');
                 if (video) {
-                    handleVideo(video);
+                    handleVideoSlide(video);
                 } else {
-                    handleImage();
+                    handleImageSlide();
                 }
-            }, 1000);
-        }, 50);
+                
+                console.log(`SliderMan: Slide #${index} geçişi tamamlandı`);
+            }, 1000); // CSS transition süresi
+        }, 100); // Kısa gecikme
     }
     
-    // Video işleme
-    function handleVideo(video) {
+    // Video slide işleme
+    function handleVideoSlide(video) {
+        console.log('SliderMan: Video slide işleniyor');
         video.muted = true;
         
         // Video bittiğinde sonraki slide'a geç
-        video.onended = () => nextSlide();
+        video.onended = () => {
+            console.log('SliderMan: Video bitti, sonraki slide\'a geçiliyor');
+            nextSlide();
+        };
         
         // Video hata verdiğinde sonraki slide'a geç
-        video.onerror = () => nextSlide();
+        video.onerror = () => {
+            console.log('SliderMan: Video hatası, sonraki slide\'a geçiliyor');
+            nextSlide();
+        };
         
         // Videoyu oynat
         try {
             const playPromise = video.play();
             if (playPromise !== undefined) {
-                playPromise.catch(() => nextSlide());
+                playPromise.catch((error) => {
+                    console.log('SliderMan: Video oynatma hatası', error);
+                    // Video oynatılamazsa, belirli bir süre sonra sonraki slide'a geç
+                    slideTimer = setTimeout(() => nextSlide(), transitionInterval);
+                });
             }
         } catch (e) {
-            nextSlide();
+            console.log('SliderMan: Video oynatma exception', e);
+            // Hata durumunda sonraki slide'a geç
+            slideTimer = setTimeout(() => nextSlide(), transitionInterval);
         }
     }
     
-    // Resim işleme
-    function handleImage() {
+    // Resim slide işleme
+    function handleImageSlide() {
+        console.log('SliderMan: Resim slide işleniyor, zamanlayıcı başlatılıyor');
+        
         // Resim için zamanlayıcı oluştur
         slideTimer = setTimeout(() => {
+            console.log('SliderMan: Resim zamanlayıcısı tamamlandı, sonraki slide\'a geçiliyor');
             nextSlide();
         }, transitionInterval);
     }
