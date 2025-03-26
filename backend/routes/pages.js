@@ -90,7 +90,7 @@ function createHtmlTemplate(page) {
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
-                    <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image">
+                    <img src="${imageUrl}" alt="${image.originalname || 'Resim'}" class="slider-image" style="width: 100%; object-fit: contain;">
                 </div>`;
             } else if (media.type === 'video') {
                 const video = media.data;
@@ -105,7 +105,7 @@ function createHtmlTemplate(page) {
                 
                 mediaItems += `
                 <div class="slider-item${index === 0 ? ' active' : ''}">
-                    <video autoplay muted playsinline loop>
+                    <video class="slider-video" autoplay muted playsinline>
                         <source src="${videoUrl}" type="${video.mimetype || 'video/mp4'}">
                     </video>
                 </div>`;
