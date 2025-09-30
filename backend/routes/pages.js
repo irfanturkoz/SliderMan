@@ -794,4 +794,37 @@ router.post('/:id/videos', auth, async (req, res) => {
 // updateMediaOrderValues fonksiyonu kaldırıldı - SQLite'da gerek yok
 
 
+// Yeni resim ekleme endpoint'i
+router.post('/:pageId/images', auth, upload.single('image'), async (req, res) => {
+    try {
+        const { pageId } = req.params;
+        const page = await Page.findByPk(pageId);
+        
+        if (!page) {
+            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
+        }
+        
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Resim dosyası gerekli' });
+        }
+        
+        // Yeni resim ekle
+        const newImage = {
+            type: 'file',
+            filename: req.file.filename,
+            originalname: req.file.originalname,
+            url: `https://aruiktisat.onrender.com/uploads/pages/${req.file.filename}`,
+            index: page.images.length
+        };
+        
+        const updatedImages = [...page.images, newImage];
+        await page.update({ images: updatedImages });
+        
+        res.json({ success: true, message: 'Resim başarıyla eklendi', image: newImage });
+    } catch (error) {
+        console.error('Resim ekleme hatası:', error);
+        res.status(500).json({ success: false, message: 'Resim eklenirken hata oluştu' });
+    }
+});
+
 module.exports = router;
