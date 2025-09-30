@@ -398,30 +398,38 @@ router.put('/:id', auth, upload.fields([
             ? 'https://aruiktisat.onrender.com' 
             : 'http://localhost:10000';
 
-        // Yüklenen yeni dosyaları ekle
+        // Yüklenen yeni dosyaları mevcut medyalara ekle
+        let updatedImages = [...page.images];
+        let updatedVideos = [...page.videos];
+        
         if (req.files?.images) {
-            const newImages = req.files.images.map(file => ({
+            const newImages = req.files.images.map((file, index) => ({
                 type: 'file',
                 filename: file.filename,
                 originalname: file.originalname,
                 url: `${baseUrl}/uploads/pages/${file.filename}`,
-                index: page.images.length
+                index: updatedImages.length + index
             }));
-            
-            page.images.push(...newImages);
+            updatedImages.push(...newImages);
+        }
+
+        if (req.files?.videos) {
+            const newVideos = req.files.videos.map((file, index) => ({
+                type: 'file',
+                filename: file.filename,
+                originalname: file.originalname,
+                url: `${baseUrl}/uploads/pages/${file.filename}`,
+                index: updatedVideos.length + index
+            }));
+            updatedVideos.push(...newVideos);
         }
         
-        if (req.files?.videos) {
-            const newVideos = req.files.videos.map(file => ({
-                type: 'file',
-                filename: file.filename,
-                originalname: file.originalname,
-                url: `${baseUrl}/uploads/pages/${file.filename}`,
-                index: page.videos.length
-            }));
-            
-            page.videos.push(...newVideos);
-        }
+        // Güncellenmiş medya dizilerini kaydet
+        await page.update({ 
+            name: page.name,
+            images: updatedImages,
+            videos: updatedVideos
+        });
 
         await page.save();
 
