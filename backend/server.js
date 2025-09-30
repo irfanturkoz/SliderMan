@@ -35,9 +35,13 @@ connectDB();
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/pages', require('./routes/pages'));
 
-// Kök yolu için login sayfasına yönlendirme (önce bu olmalı)
+// Ana sayfa - login'e yönlendir
 app.get('/', (req, res) => {
-    res.redirect('/login.html');
+    const loginHtml = `
+    <!DOCTYPE html>
+    <html><head><meta http-equiv="refresh" content="0;url=/login.html"></head>
+    <body>Yönlendiriliyor...</body></html>`;
+    res.send(loginHtml);
 });
 
 // HTML dosyalarını serve et
