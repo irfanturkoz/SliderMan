@@ -1069,16 +1069,18 @@ function setupEventListeners() {
     const cancelVideoBtn = document.getElementById('cancelVideoBtn');
 
     if (addImageBtn) {
-        addImageBtn.addEventListener('click', () => {
-            console.log('Resim Ekle butonuna tıklandı');
+        addImageBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             showNewMediaSection('image');
         });
-        console.log('Resim Ekle butonu event listener eklendi');
-    } else {
-        console.error('addImageBtn bulunamadı!');
     }
     if (addVideoBtn) {
-        addVideoBtn.addEventListener('click', () => showNewMediaSection('video'));
+        addVideoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showNewMediaSection('video');
+        });
     }
     if (uploadImageBtn) {
         uploadImageBtn.addEventListener('click', () => uploadNewMedia('image'));
@@ -1101,16 +1103,11 @@ function setupEventListeners() {
 
 // Yeni medya ekleme fonksiyonları
 function showNewMediaSection(type) {
-    console.log('showNewMediaSection çağrıldı, type:', type);
-    
     const newMediaSection = document.getElementById('newMediaSection');
     const newImageSection = document.getElementById('newImageSection');
     const newVideoSection = document.getElementById('newVideoSection');
     
-    console.log('Elements:', { newMediaSection, newImageSection, newVideoSection });
-    
     if (!newMediaSection || !newImageSection || !newVideoSection) {
-        console.error('Gerekli elementler bulunamadı!');
         return;
     }
     
@@ -1121,14 +1118,11 @@ function showNewMediaSection(type) {
     // İlgili bölümü göster
     if (type === 'image') {
         newImageSection.style.display = 'block';
-        console.log('Image section gösterildi');
     } else if (type === 'video') {
         newVideoSection.style.display = 'block';
-        console.log('Video section gösterildi');
     }
     
     newMediaSection.style.display = 'block';
-    console.log('newMediaSection gösterildi');
 }
 
 function hideNewMediaSection() {
