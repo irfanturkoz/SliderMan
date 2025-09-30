@@ -724,8 +724,7 @@ router.post('/:id/images', auth, upload.single('image'), async (req, res) => {
         page.images.push(imageData);
         await page.save();
         
-        // HTML şablonunu karışık sıralama ile güncelle
-        await updateHtmlTemplateWithMixedOrder(page);
+        // HTML şablonu güncelleme kaldırıldı - SQLite'da gerek yok
         
         res.json({
             message: 'Resim başarıyla eklendi.',
@@ -767,8 +766,7 @@ router.post('/:id/videos', auth, async (req, res) => {
         page.videos.push(videoData);
         await page.save();
         
-        // HTML şablonunu karışık sıralama ile güncelle
-        await updateHtmlTemplateWithMixedOrder(page);
+        // HTML şablonu güncelleme kaldırıldı - SQLite'da gerek yok
         
         res.json({
             message: 'Video başarıyla eklendi.',
