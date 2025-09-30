@@ -561,23 +561,21 @@ router.delete('/:pageId/images/:imageId', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Resim bulunamadı' });
         }
         
-        // Resmi diziden çıkar
-        const removedImage = page.images.splice(imageIndex, 1)[0];
+        // Yeni images array'i oluştur (silinen hariç)
+        const newImages = page.images.filter((_, index) => index !== imageIndex);
+        const removedImage = page.images[imageIndex];
         
-        // Sequelize'a JSON field'ının değiştiğini bildir
-        page.changed('images', true);
+        // Sayfayı güncelle
+        await page.update({ images: newImages });
         
         // Dosya sisteminden de sil (eğer dosya varsa)
-        if (removedImage.filename) {
+        if (removedImage && removedImage.filename) {
             const filePath = path.join(__dirname, '..', '..', 'uploads', 'pages', removedImage.filename);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
                 console.log(`Dosya silindi: ${filePath}`);
             }
         }
-        
-        // Sayfayı kaydet
-        await page.save();
         
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
@@ -616,23 +614,21 @@ router.delete('/:pageId/videos/:videoId', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Video bulunamadı' });
         }
         
-        // Videoyu diziden çıkar
-        const removedVideo = page.videos.splice(videoIndex, 1)[0];
+        // Yeni videos array'i oluştur (silinen hariç)
+        const newVideos = page.videos.filter((_, index) => index !== videoIndex);
+        const removedVideo = page.videos[videoIndex];
         
-        // Sequelize'a JSON field'ının değiştiğini bildir
-        page.changed('videos', true);
+        // Sayfayı güncelle
+        await page.update({ videos: newVideos });
         
         // Dosya sisteminden de sil (eğer dosya varsa)
-        if (removedVideo.filename) {
+        if (removedVideo && removedVideo.filename) {
             const filePath = path.join(__dirname, '..', '..', 'uploads', 'pages', removedVideo.filename);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
                 console.log(`Dosya silindi: ${filePath}`);
             }
         }
-        
-        // Sayfayı kaydet
-        await page.save();
         
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
