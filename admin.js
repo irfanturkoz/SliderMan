@@ -1083,10 +1083,16 @@ function setupEventListeners() {
         });
     }
     if (uploadImageBtn) {
-        uploadImageBtn.addEventListener('click', () => uploadNewMedia('image'));
+        uploadImageBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            uploadNewMedia('image');
+        });
     }
     if (uploadVideoBtn) {
-        uploadVideoBtn.addEventListener('click', () => uploadNewMedia('video'));
+        uploadVideoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            uploadNewMedia('video');
+        });
     }
     if (cancelImageBtn) {
         cancelImageBtn.addEventListener('click', () => hideNewMediaSection());
@@ -1164,8 +1170,10 @@ async function uploadNewMedia(type) {
             if (response.ok) {
                 showAlert('success', 'Resim başarıyla eklendi');
                 hideNewMediaSection();
-                // Sayfayı yenile ve medya listesini güncelle
-                location.reload();
+                // Medya listesini hemen güncelle
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             } else {
                 throw new Error('Resim yüklenirken hata oluştu');
             }
@@ -1188,8 +1196,10 @@ async function uploadNewMedia(type) {
                 if (response.ok) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
-                    // Sayfayı yenile ve medya listesini güncelle
-                    location.reload();
+                    // Medya listesini hemen güncelle
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
                 } else {
                     throw new Error('Video yüklenirken hata oluştu');
                 }
@@ -1207,8 +1217,10 @@ async function uploadNewMedia(type) {
                 if (response.ok) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
-                    // Sayfayı yenile ve medya listesini güncelle
-                    location.reload();
+                    // Medya listesini hemen güncelle
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
                 } else {
                     throw new Error('Video eklenirken hata oluştu');
                 }
