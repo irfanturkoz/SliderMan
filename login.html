@@ -81,9 +81,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const API_URL = window.location.hostname === 'localhost' 
-                ? 'http://localhost:10000/api' 
-                : `${window.location.origin}/api`;
+            const API_URL = `${window.location.origin}/api`;
             const loginForm = document.getElementById('loginForm');
             const errorAlert = document.getElementById('errorAlert');
 

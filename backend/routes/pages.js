@@ -781,47 +781,7 @@ router.post('/:id/videos', auth, async (req, res) => {
     }
 });
 
-// Mevcut medya öğelerine order değeri ata
-async function updateMediaOrderValues() {
-    try {
-        console.log('Tüm sayfalardaki medya öğelerine order değeri atanıyor...');
-        
-        // Tüm sayfaları getir
-        const pages = await Page.findAll();
-        
-        for (const page of pages) {
-            let updated = false;
-            
-            // Resimlere order değeri ata
-            page.images.forEach((image, index) => {
-                if (image.order === undefined) {
-                    image.order = index;
-                    updated = true;
-                    console.log(`Sayfa ${page.name}: Resim ${image._id} için order=${index} atandı`);
-                }
-            });
-            
-            // Videolara order değeri ata
-            page.videos.forEach((video, index) => {
-                if (video.order === undefined) {
-                    video.order = index;
-                    updated = true;
-                    console.log(`Sayfa ${page.name}: Video ${video._id} için order=${index} atandı`);
-                }
-            });
-            
-            // Eğer değişiklik yapıldıysa sayfayı kaydet
-            if (updated) {
-                await page.save();
-                console.log(`Sayfa ${page.name} güncellendi`);
-            }
-        }
-        
-        console.log('Tüm medya öğelerine order değeri atama işlemi tamamlandı');
-    } catch (error) {
-        console.error('Medya order değerleri güncellenirken hata:', error);
-    }
-}
+// updateMediaOrderValues fonksiyonu tamamen kaldırıldı
 
 // updateMediaOrderValues fonksiyonu kaldırıldı - SQLite'da gerek yok
 
