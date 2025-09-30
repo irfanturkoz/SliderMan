@@ -823,7 +823,6 @@ async function updateMediaOrderValues() {
     }
 }
 
-// Uygulama başladığında mevcut medya öğelerine order değeri ata
-updateMediaOrderValues();
+// updateMediaOrderValues fonksiyonu kaldırıldı - SQLite'da gerek yok
 
 module.exports = router;
