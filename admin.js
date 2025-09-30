@@ -730,8 +730,13 @@ async function deleteMedia(mediaId, mediaType) {
         const result = await response.json();
         console.log('Medya silindi:', result);
         
-        // Sayfa detaylarını yeniden yükle
-        await loadPage(pageId);
+        // Medya listesini hemen temizle
+        document.getElementById('allMediaList').innerHTML = '<div class="alert alert-info">Medya listesi güncelleniyor...</div>';
+        
+        // Kısa bir gecikme sonra sayfa detaylarını yeniden yükle
+        setTimeout(async () => {
+            await loadPage(pageId);
+        }, 500);
         
         showAlert('success', `${mediaType === 'image' ? 'Resim' : 'Video'} başarıyla silindi`);
     } catch (error) {
