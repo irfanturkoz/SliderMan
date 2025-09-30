@@ -1114,9 +1114,11 @@ async function uploadNewImage(file) {
         
         if (response.ok) {
             showAlert('success', 'Resim başarıyla eklendi');
-            // Medya listesini direkt güncelle
-            const pageId = document.getElementById('pageId').value;
-            await loadPage(pageId);
+            
+            // 1 saniye bekle sonra sayfayı yenile (cache bypass)
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
         } else {
             throw new Error('Resim yüklenirken hata oluştu');
         }
