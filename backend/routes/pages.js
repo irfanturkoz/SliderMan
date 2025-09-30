@@ -661,30 +661,8 @@ router.post('/update-media-order', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
         }
 
-        // Medya sıralamasını güncelle
-        if (mixedOrder && mixedOrder.length > 0) {
-            // Her medya öğesi için order değerini güncelle
-            mixedOrder.forEach((item, index) => {
-                if (item.type === 'image') {
-                    const image = page.images.find(img => img._id.toString() === item.id);
-                    if (image) {
-                        image.order = index;
-                    }
-                } else if (item.type === 'video') {
-                    const video = page.videos.find(vid => vid._id.toString() === item.id);
-                    if (video) {
-                        video.order = index;
-                    }
-                }
-            });
-
-            // Resimleri ve videoları order değerine göre sırala
-            page.images.sort((a, b) => a.order - b.order);
-            page.videos.sort((a, b) => a.order - b.order);
-        }
-
-        // Sayfayı kaydet
-        await page.save();
+        // SQLite'da medya sıralama basitleştirildi - şimdilik sıralama desteği yok
+        console.log('Medya sıralama isteği alındı ama SQLite da henüz desteklenmiyor');
 
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
