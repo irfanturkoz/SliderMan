@@ -67,9 +67,9 @@ app.get('*.html', (req, res) => {
     }
 });
 
-// Kök yolu için yönlendirme
+// Kök yolu için login sayfasına yönlendirme
 app.get('/', (req, res) => {
-    res.send('SliderMan Backend API - <a href="/api/pages">Sayfaları Görüntüle</a>');
+    res.redirect('/login.html');
 });
 
 // Tüm diğer HTML istekleri için
