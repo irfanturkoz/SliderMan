@@ -196,15 +196,21 @@ async function loadPages() {
                 window.open(`${backendUrl}/${safeFileName}.html`, '_blank');
             });
             
-            // Sayfa silme butonu bulundu, click event listener ekleniyor
-        const deletePageBtn = document.getElementById('deletePageBtn');
-        if (deletePageBtn) {
-            deletePageBtn.addEventListener('click', () => {
-                if (currentEditingPageId && confirm('Bu sayfayı silmek istediğinize emin misiniz?')) {
-                    deletePage(currentEditingPageId);
+            // Silme butonuna tıklama olayı
+            const deleteButton = pageElement.querySelector('.delete-page');
+            deleteButton.addEventListener('click', () => {
+                if (confirm(`"${page.name || 'İsimsiz Sayfa'}" sayfasını silmek istediğinize emin misiniz?`)) {
+                    deletePage(page.id);
                 }
             });
-            console.log('Sayfa silme butonu bulundu, click event listener ekleniyor');
+            
+            pagesList.appendChild(pageElement);
+            console.log(`Sayfa ${index + 1} listeye eklendi`);
+        });
+        
+        console.log('Tüm sayfalar listeye eklendi');
+        
+    } catch (error) {
         console.error('Sayfaları yükleme hatası:', error);
         showAlert('danger', 'Sayfalar yüklenirken bir hata oluştu: ' + error.message);
     }
