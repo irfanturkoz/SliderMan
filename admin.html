@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SliderMan - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            z-index: 1030;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: 0;
+            width: 250px;
+            z-index: 100;
+            padding: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 76px);
+            padding: 0 1rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        .sidebar .nav-link {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: #f0f7ff;
+            color: #0d6efd;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            flex: 1;
+            margin-top: 56px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 991.98px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+                padding: 10px;
+                margin-top: 56px;
+            }
+            
+            .sidebar-sticky {
+                height: auto;
+                padding: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-top: 0;
+                padding: 20px;
+            }
+        }
+        
+        /* Video ve iframe'lerin sürüklemeyi engellemesini önle */
+        .media-preview iframe,
+        .media-preview video {
+            pointer-events: none !important;
+        }
+        
+        /* Medya öğeleri için temel stiller */
+        .media-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,.05);
+            overflow: hidden;
+            cursor: move; /* Sürüklenebilir olduğunu belirt */
+            touch-action: none; /* Mobil cihazlarda sürükleme için gerekli */
+            user-select: none; /* Metin seçimini engelle */
+            z-index: 1;
+        }
+        
+        .media-item-content {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .handle {
+            cursor: grab;
+            padding: 0 10px;
+            color: #aaa;
+        }
+        
+        .media-preview {
+            width: 100px;
+            height: 70px;
+            overflow: hidden;
+            margin-right: 15px;
+            position: relative;
+        }
+        
+        /* Sürükleme sırasında kullanılacak stiller */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f0f8ff;
+        }
+        
+        .sortable-chosen {
+            background-color: #f0f8ff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .sortable-fallback {
+            transform: scale(0.95);
+            opacity: 0.8;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        /* Sürükleme tutamaçı */
+        .handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 100%;
+            background-color: rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            z-index: 10;
+        }
+        
+        .handle i {
+            color: #666;
+        }
+        
+        /* Medya önizleme alanı */
+        .media-preview {
+            height: 100px;
+            padding-left: 30px; /* Tutamaç için alan bırak */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        
+        .media-preview img,
+        .media-preview video,
+        .media-preview iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Video önizleme stilleri */
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .video-thumbnail i {
+            font-size: 2rem;
+        }
+        
+        /* Video iframe stilleri */
+        .media-preview iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        
+        /* Medya bilgi alanı */
+        .media-info {
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Sıra numarası */
+        .media-order {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 5;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+            padding: 15px 20px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        
+        .page-card {
+            border-radius: 8px;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 5px rgba(0,0,0,.05);
+        }
+        
+        .page-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,.1);
+        }
+        
+        .preview-container {
+            height: 180px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-placeholder, .empty-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            background-color: #e9ecef;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #000;
+            color: white;
+            text-align: center;
+        }
+        
+        .video-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .video-thumbnail, .vimeo-thumbnail {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            color: white;
+        }
+        
+        .vimeo-thumbnail {
+            background-color: #1ab7ea;
+        }
+        
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+        }
+        
+        .btn-group .btn {
+            border-radius: 4px;
+            margin: 0 2px;
+        }
+        
+        #pagesList {
+            margin-top: 20px;
+        }
+        
+        /* Medya listesi için stiller */
+        #mediaList .media-item {
+            transition: all 0.2s;
+        }
+        
+        #mediaList .media-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* Video thumbnail stilleri */
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            color: white;
+            position: relative;
+        }
+        
+        .video-thumbnail.vimeo {
+            background-color: #1ab7ea;
+        }
+        
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        
+        /* Sortable liste stilleri */
+        .sortable-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">SliderMan Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="localStorage.removeItem('token'); window.location.href='login.html';">
+                            <i class="fas fa-sign-out-alt"></i> Çıkış
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="showSection('pagesSection'); setActiveMenu(this);">
+                                <i class="fas fa-file-alt"></i> Sayfalar
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-lg-10 main-content">
+                <!-- Alert Container -->
+                <div id="alertContainer" class="mt-3"></div>
+                
+                <!-- Pages Section -->
+                <div id="pagesSection" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Sayfalar</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" id="createPageBtn" class="btn btn-primary" onclick="togglePageForm(true)">
+                                <i class="fas fa-plus"></i> Yeni Sayfa
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pagesList" class="row">
+                        <!-- Sayfalar buraya yüklenecek -->
+                    </div>
+                </div>
+
+                <!-- Page Form -->
+                <div id="pageFormContainer" class="mt-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 id="formTitle">Yeni Sayfa Oluştur</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="pageForm">
+                                <input type="hidden" id="pageId" name="id">
+                                
+                                <div class="mb-3">
+                                    <label for="pageName" class="form-label">Sayfa Adı</label>
+                                    <input type="text" class="form-control" id="pageName" name="name" required>
+                                    <div class="form-text">Sayfa adı URL'de kullanılacaktır.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="imageFiles" class="form-label">Resim Dosyaları</label>
+                                    <input type="file" class="form-control" id="imageFiles" name="images" multiple accept="image/*">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="videoFiles" class="form-label">Video Dosyaları</label>
+                                    <input type="file" class="form-control" id="videoFiles" name="videos" multiple accept="video/*">
+                                </div>
+                                
+                                <div id="mediaSection" class="mt-4" style="display: none;">
+                                    <h5>
+                                        Mevcut Medya
+                                    </h5>
+                                    
+                                    <div id="allMediaList" class="mt-3 sortable-list">
+                                        <!-- Media items will be loaded here -->
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-4">
+                                    <div>
+                                        <button type="button" id="cancelForm" class="btn btn-secondary" onclick="togglePageForm(false)">İptal</button>
+                                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                                    </div>
+                                    <button type="button" id="deletePageBtn" class="btn btn-danger" style="display: none;">
+                                        <i class="fas fa-trash"></i> Sayfayı Sil
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="admin.js?v=1.1"></script>
+</body>
+</html>

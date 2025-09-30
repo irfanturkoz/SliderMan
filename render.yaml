@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sliderman-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: your-super-secret-jwt-key-change-this
+    plan: free

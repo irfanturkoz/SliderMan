@@ -1,0 +1,109 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.card {
+    margin-bottom: 20px;
+}
+
+.table img {
+    max-width: 100px;
+    height: auto;
+}
+
+/* Sidebar Styles */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: #343a40;
+    padding: 20px 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+#sidebar.collapsed {
+    width: 0;
+    padding: 0;
+}
+
+#sidebar a {
+    display: block;
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+#sidebar a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar a.active-menu {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#sidebar i {
+    margin-right: 10px;
+}
+
+/* Main Content Styles */
+#mainContent {
+    margin-left: 250px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    min-height: 100vh;
+}
+
+#mainContent.expanded {
+    margin-left: 0;
+}
+
+/* Toggle Button */
+#sidebarToggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    display: none;
+}
+
+/* Container for centering content */
+.container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+    }
+    
+    #sidebar.collapsed {
+        transform: translateX(0);
+    }
+    
+    #mainContent {
+        margin-left: 0;
+        padding-top: 60px;
+    }
+    
+    #sidebarToggle {
+        display: block;
+    }
+}

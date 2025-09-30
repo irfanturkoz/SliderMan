@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SliderMan - Video Slider</title>
+    <link rel="stylesheet" href="http://localhost:3000/slider.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .slider-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        .slider-item.active {
+            opacity: 1;
+        }
+
+        .slider-item img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .slider-item video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .slider-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+        }
+
+        .slider-arrow {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .slider-arrow:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Mobil cihazlar için dokunmatik kontroller */
+        @media (max-width: 768px) {
+            .slider-controls {
+                bottom: 10px;
+            }
+
+            .slider-arrow {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="slider">
+            
+        <div class="slider-item active">
+            <img src="http://localhost:3000/uploads/pages/1742978437265-347934151.jpeg" alt="Flux_Dev_A_mesmerizing_logo_design_for_CodePith_where_the_icon_0.jpeg" class="slider-image">
+        </div>
+        </div>
+        <button class="slider-prev"><i class="fas fa-chevron-left"></i></button>
+        <button class="slider-next"><i class="fas fa-chevron-right"></i></button>
+        <div class="slider-dots"></div>
+    </div>
+    <script src="http://localhost:3000/js/slider.js"></script>
+</body>
+</html>

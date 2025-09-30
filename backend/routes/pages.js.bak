@@ -1,0 +1,1023 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const mongoose = require('mongoose');
+const auth = require('../middleware/auth');
+
+// Dosya yükleme ayarları
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'pages');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        // Dosya tipini kontrol et
+        if (file.fieldname === 'images') {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                return cb(new Error('Sadece resim dosyaları yüklenebilir!'));
+            }
+        } else if (file.fieldname === 'videos') {
+            if (!file.originalname.match(/\.(mp4|webm|ogg)$/)) {
+                return cb(new Error('Sadece video dosyaları yüklenebilir!'));
+            }
+        }
+        cb(null, true);
+    }
+});
+
+// Sayfa modeli
+const pageSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    media: [{
+        type: { type: String, enum: ['image', 'video'], required: true },
+        url: { type: String, required: true },
+        filename: { type: String },
+        originalname: { type: String },
+        index: { type: Number, default: 0 }
+    }]
+});
+
+const Page = mongoose.model('Page', pageSchema);
+
+// HTML şablonunu oluştur
+function createHtmlTemplate(page) {
+    // Resimleri ve videoları birleştir ve sırala
+    const allMedia = page.media.map((media, index) => ({
+        type: media.type,
+        filename: media.filename,
+        url: media.url,
+        index: media.index
+    }));
+
+    // Medya öğelerini HTML'e dönüştür
+    const mediaItems = allMedia.map((item, index) => {
+        if (item.type === 'image') {
+            // Resim ise
+            const src = item.url;
+            return `<img src="${src}" alt="Slide ${index + 1}" class="slide">`;
+        } else if (item.type === 'video') {
+            // Video ise
+            if (item.filename) {
+                // Yerel video dosyası
+                const src = `/uploads/pages/${item.filename}`;
+                return `<video src="${src}" class="slide" muted autoplay playsinline></video>`;
+            } else if (item.url) {
+                // URL tabanlı video - YouTube veya Vimeo olabilir
+                if (item.url.includes('youtube.com') || item.url.includes('youtu.be')) {
+                    // YouTube video
+                    let videoId = '';
+                    if (item.url.includes('youtube.com/watch')) {
+                        const urlParams = new URL(item.url).searchParams;
+                        videoId = urlParams.get('v');
+                    } else if (item.url.includes('youtu.be/')) {
+                        videoId = item.url.split('youtu.be/')[1].split('?')[0];
+                    }
+                    
+                    if (videoId) {
+                        // enablejsapi=1 parametresi ekleyerek video bitişini yakalayabiliyoruz
+                        return `<div class="slide youtube-container" data-video-id="${videoId}">
+                            <iframe 
+                                id="youtube-player-${index}" 
+                                src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen
+                            ></iframe>
+                        </div>`;
+                    }
+                } else if (item.url.includes('vimeo.com')) {
+                    // Vimeo video
+                    let vimeoId = '';
+                    if (item.url.includes('vimeo.com/')) {
+                        vimeoId = item.url.split('vimeo.com/')[1].split('?')[0];
+                    }
+                    
+                    if (vimeoId) {
+                        return `<div class="slide vimeo-container" data-video-id="${vimeoId}">
+                            <iframe 
+                                id="vimeo-player-${index}" 
+                                src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&controls=0" 
+                                frameborder="0" 
+                                allow="autoplay; fullscreen; picture-in-picture" 
+                                allowfullscreen
+                            ></iframe>
+                        </div>`;
+                    }
+                } else {
+                    // Diğer URL video kaynakları
+                    return `<video src="${item.url}" class="slide" muted autoplay playsinline></video>`;
+                }
+            }
+        }
+        return '';
+    }).filter(Boolean).join('');
+
+    return `<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${page.name}</title>
+    <link rel="stylesheet" href="http://localhost:8080/style.css">
+    <!-- Vimeo Player API -->
+    <script src="https://player.vimeo.com/api/player.js"></script>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="slider">
+            ${mediaItems}
+        </div>
+        <button class="prev" onclick="prevSlide()">&#10094;</button>
+        <button class="next" onclick="nextSlide()">&#10095;</button>
+        <div class="dots-container" id="dotsContainer"></div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        let imageTimer;
+        let isTransitioning = false;
+        let youtubePlayersMap = new Map(); // YouTube oynatıcılarını saklamak için
+        let vimeoPlayersMap = new Map(); // Vimeo oynatıcılarını saklamak için
+
+        // YouTube API'sini yükle
+        let tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // YouTube API hazır olduğunda
+        window.onYouTubeIframeAPIReady = function() {
+            // YouTube iframe'lerini bul ve oynatıcıları oluştur
+            document.querySelectorAll('.youtube-container').forEach((container, index) => {
+                const videoId = container.getAttribute('data-video-id');
+                const iframeId = container.querySelector('iframe').id;
+                
+                const player = new YT.Player(iframeId, {
+                    events: {
+                        'onReady': onYouTubePlayerReady,
+                        'onStateChange': onYouTubePlayerStateChange
+                    }
+                });
+                
+                youtubePlayersMap.set(iframeId, player);
+            });
+        };
+
+        // YouTube oynatıcı hazır olduğunda
+        function onYouTubePlayerReady(event) {
+            // Player hazır, gerekirse ek işlemler yapılabilir
+            console.log("YouTube player hazır");
+        }
+
+        // YouTube oynatıcı durum değişikliğini izle
+        function onYouTubePlayerStateChange(event) {
+            // Video bittiğinde (state = 0)
+            if (event.data === 0) {
+                console.log("YouTube video bitti (API event), sonraki slayta geçiliyor");
+                nextSlide();
+            }
+        }
+
+        // Vimeo oynatıcılarını başlat
+        function initVimeoPlayers() {
+            document.querySelectorAll('.vimeo-container').forEach((container, index) => {
+                const iframeId = container.querySelector('iframe').id;
+                const player = new Vimeo.Player(iframeId);
+                
+                // Video bittiğinde sonraki slayta geç
+                player.on('ended', function() {
+                    console.log("Vimeo video bitti, sonraki slayta geçiliyor");
+                    nextSlide();
+                });
+                
+                // Video yüklendiğinde
+                player.on('loaded', function() {
+                    console.log("Vimeo video yüklendi");
+                });
+                
+                // Video oynatıldığında
+                player.on('play', function() {
+                    console.log("Vimeo video oynatılıyor");
+                    
+                    // Video süresini al ve süre sonunda bir güvenlik kontrolü ekle
+                    player.getDuration().then(function(duration) {
+                        if (duration > 0) {
+                            console.log("Vimeo video süresi: " + duration + " saniye");
+                            // Video süresinden biraz daha uzun bir süre sonra kontrol et
+                            // Bu, video bittiğinde 'ended' event'i tetiklenmezse bir güvenlik önlemi
+                            setTimeout(function() {
+                                // Eğer hala bu video aktifse ve oynatılıyorsa, süreyi kontrol et
+                                if (slides[currentSlide].classList.contains('vimeo-container') && 
+                                    slides[currentSlide].querySelector('iframe').id === iframeId) {
+                                    
+                                    player.getCurrentTime().then(function(currentTime) {
+                                        // Eğer video neredeyse bitmişse (son 1 saniye içindeyse)
+                                        if (currentTime > 0 && duration - currentTime < 1) {
+                                            console.log("Vimeo video süre kontrolü ile bitti sayıldı, sonraki slayta geçiliyor");
+                                            nextSlide();
+                                        }
+                                    }).catch(function(error) {
+                                        console.error("Vimeo süre kontrolü hatası: ", error);
+                                    });
+                                }
+                            }, (duration * 1000) + 2000); // Video süresinden 2 saniye fazla bekle
+                        }
+                    }).catch(function(error) {
+                        console.error("Vimeo süre alma hatası: ", error);
+                    });
+                });
+                
+                vimeoPlayersMap.set(iframeId, player);
+            });
+        }
+
+        // Gezinme noktalarını oluştur
+        function createDots() {
+            const dotsContainer = document.getElementById('dotsContainer');
+            dotsContainer.innerHTML = '';
+            
+            for (let i = 0; i < slides.length; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.addEventListener('click', () => {
+                    if (currentSlide !== i) {
+                        showSlide(i);
+                    }
+                });
+                dotsContainer.appendChild(dot);
+            }
+            
+            updateDots();
+        }
+        
+        // Aktif noktayı güncelle
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                if (i === currentSlide) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        // Önceki slayta geç
+        function prevSlide() {
+            if (isTransitioning) return;
+            
+            clearTimeout(imageTimer);
+            
+            const prevIndex = currentSlide;
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            
+            animateSlideTransition(prevIndex, currentSlide);
+        }
+
+        // Sonraki slayta geç
+        function nextSlide() {
+            if (isTransitioning) return;
+            
+            clearTimeout(imageTimer);
+            
+            const prevIndex = currentSlide;
+            currentSlide = (currentSlide + 1) % slides.length;
+            
+            animateSlideTransition(prevIndex, currentSlide);
+        }
+
+        // Aktif slayttaki medyayı durdur
+        function stopCurrentMedia(index) {
+            const slide = slides[index];
+            
+            // HTML5 Video ise
+            if (slide.tagName === 'VIDEO') {
+                try {
+                    slide.pause();
+                    slide.currentTime = 0;
+                } catch (e) {
+                    console.error("Video durdurma hatası: ", e);
+                }
+            } 
+            // YouTube container ise
+            else if (slide.classList.contains('youtube-container')) {
+                const iframeId = slide.querySelector('iframe').id;
+                const player = youtubePlayersMap.get(iframeId);
+                if (player && typeof player.pauseVideo === 'function') {
+                    player.pauseVideo();
+                }
+            } 
+            // Vimeo container ise
+            else if (slide.classList.contains('vimeo-container')) {
+                const iframeId = slide.querySelector('iframe').id;
+                const player = vimeoPlayersMap.get(iframeId);
+                if (player) {
+                    player.pause();
+                }
+            }
+        }
+
+        // Slayt geçiş animasyonu
+        function animateSlideTransition(fromIndex, toIndex) {
+            isTransitioning = true;
+            
+            // Önceki slayttaki medyayı durdur
+            stopCurrentMedia(fromIndex);
+            
+            // Önceki slaytı kapat
+            slides[fromIndex].classList.remove('active');
+            slides[fromIndex].classList.add('slide-fadeOut');
+            
+            // Yeni slaytı aç
+            setTimeout(() => {
+                slides[fromIndex].classList.remove('slide-fadeOut');
+                slides[toIndex].classList.add('active', 'slide-fadeIn');
+                
+                setTimeout(() => {
+                    slides[toIndex].classList.remove('slide-fadeIn');
+                    isTransitioning = false;
+                    
+                    const currentSlide = slides[toIndex];
+                    
+                    // HTML5 Video ise
+                    if (currentSlide.tagName === 'VIDEO') {
+                        try {
+                            currentSlide.currentTime = 0;
+                            currentSlide.play().catch(e => {
+                                console.error("Video oynatma hatası: ", e);
+                                // Video oynatılamazsa 20 saniye sonra geçiş yap
+                                imageTimer = setTimeout(nextSlide, 20000);
+                            });
+                            
+                            // Video bittiğinde sonraki slayta geç
+                            currentSlide.onended = function() {
+                                console.log("Video bitti, sonraki slayta geçiliyor");
+                                nextSlide();
+                            };
+                        } catch (e) {
+                            console.error("Video kontrolü hatası: ", e);
+                            // Hata durumunda 20 saniye sonra geçiş yap
+                            imageTimer = setTimeout(nextSlide, 20000);
+                        }
+                    } 
+                    // YouTube container ise
+                    else if (currentSlide.classList.contains('youtube-container')) {
+                        const iframeId = currentSlide.querySelector('iframe').id;
+                        const player = youtubePlayersMap.get(iframeId);
+                        if (player && typeof player.playVideo === 'function') {
+                            player.seekTo(0);
+                            player.playVideo();
+                        } else {
+                            // YouTube player hazır değilse 20 saniye sonra geçiş yap
+                            imageTimer = setTimeout(nextSlide, 20000);
+                        }
+                    } 
+                    // Vimeo container ise
+                    else if (currentSlide.classList.contains('vimeo-container')) {
+                        const iframeId = currentSlide.querySelector('iframe').id;
+                        const player = vimeoPlayersMap.get(iframeId);
+                        if (player) {
+                            player.setCurrentTime(0).then(function() {
+                                player.play().catch(function(error) {
+                                    console.error("Vimeo oynatma hatası: ", error);
+                                    // Vimeo oynatılamazsa 20 saniye sonra geçiş yap
+                                    imageTimer = setTimeout(nextSlide, 20000);
+                                });
+                            });
+                        } else {
+                            // Vimeo player hazır değilse 20 saniye sonra geçiş yap
+                            imageTimer = setTimeout(nextSlide, 20000);
+                        }
+                    } else {
+                        // Resim ise 20 saniye sonra geçiş yap
+                        imageTimer = setTimeout(nextSlide, 20000);
+                    }
+                    
+                    updateDots();
+                }, 1000);
+            }, 500);
+        }
+
+        // Belirli bir slaytı göster
+        function showSlide(n) {
+            if (isTransitioning || n === currentSlide) return;
+            
+            clearTimeout(imageTimer);
+            
+            // Tüm medyaları durdur
+            for (let i = 0; i < slides.length; i++) {
+                stopCurrentMedia(i);
+            }
+            
+            const prevIndex = currentSlide;
+            currentSlide = n;
+            
+            animateSlideTransition(prevIndex, currentSlide);
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vimeo oynatıcılarını başlat
+            initVimeoPlayers();
+            
+            // İlk slaytı göster
+            if (slides.length > 0) {
+                createDots();
+                slides[0].classList.add('active');
+                
+                const firstSlide = slides[0];
+                
+                // İlk slayt HTML5 video ise
+                if (firstSlide.tagName === 'VIDEO') {
+                    try {
+                        firstSlide.play().catch(e => {
+                            console.error("İlk video oynatma hatası: ", e);
+                            imageTimer = setTimeout(nextSlide, 20000);
+                        });
+                        
+                        firstSlide.onended = function() {
+                            console.log("İlk video bitti, sonraki slayta geçiliyor");
+                            nextSlide();
+                        };
+                    } catch (e) {
+                        console.error("İlk video kontrolü hatası: ", e);
+                        imageTimer = setTimeout(nextSlide, 20000);
+                    }
+                } 
+                // İlk slayt YouTube container ise
+                else if (firstSlide.classList.contains('youtube-container')) {
+                    // YouTube API hazır olduğunda player otomatik başlayacak
+                    // Yine de bir güvenlik önlemi olarak timer ekleyelim
+                    imageTimer = setTimeout(nextSlide, 20000);
+                } 
+                // İlk slayt Vimeo container ise
+                else if (firstSlide.classList.contains('vimeo-container')) {
+                    // Vimeo API hazır olduğunda player otomatik başlayacak
+                    // Yine de bir güvenlik önlemi olarak timer ekleyelim
+                    imageTimer = setTimeout(nextSlide, 20000);
+                } else {
+                    // Resim ise 20 saniye sonra geçiş yap
+                    imageTimer = setTimeout(nextSlide, 20000);
+                }
+                
+                updateDots();
+            }
+        });
+
+        // YouTube iframe'lerinden mesaj alınması için event listener
+        window.addEventListener('message', function(event) {
+            // YouTube'dan gelen mesajları kontrol et
+            try {
+                const data = JSON.parse(event.data);
+                // YouTube API mesajı
+                if (data.event === 'onStateChange' && data.info === 0) {
+                    console.log("YouTube video bitti (message event), sonraki slayta geçiliyor");
+                    nextSlide();
+                }
+                // Vimeo API mesajı
+                else if (data.method === 'finish') {
+                    console.log("Vimeo video bitti (message event), sonraki slayta geçiliyor");
+                    nextSlide();
+                }
+            } catch (e) {
+                // JSON parse hatası, YouTube veya Vimeo mesajı değil
+            }
+        });
+    }
+});
+
+// Sayfa detayını getir
+router.get('/:id', auth, async (req, res) => {
+    try {
+        console.log('Sayfa detayı isteği:', req.params.id);
+        
+        const page = await Page.findById(req.params.id);
+        if (!page) {
+            console.log('Sayfa bulunamadı:', req.params.id);
+            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
+        }
+        
+        console.log('Sayfa bulundu:', {
+            id: page._id,
+            name: page.name,
+            media: page.media ? page.media.length : 0
+        });
+        
+        res.json({ success: true, page });
+    } catch (error) {
+        console.error('Sayfa detayı getirme hatası:', error);
+        res.status(500).json({ success: false, message: 'Sayfa detayları alınırken bir hata oluştu' });
+    }
+});
+
+// Alternatif endpoint (pageId parametresi için)
+router.get('/:pageId/details', auth, async (req, res) => {
+    try {
+        console.log('Alternatif sayfa detayı isteği:', req.params.pageId);
+        
+        const page = await Page.findById(req.params.pageId);
+        if (!page) {
+            console.log('Sayfa bulunamadı:', req.params.pageId);
+            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
+        }
+        
+        console.log('Sayfa bulundu:', {
+            id: page._id,
+            name: page.name,
+            media: page.media ? page.media.length : 0
+        });
+        
+        res.json({ success: true, page });
+    } catch (error) {
+        console.error('Sayfa detayı getirme hatası:', error);
+        res.status(500).json({ success: false, message: 'Sayfa detayları alınırken bir hata oluştu' });
+    }
+});
+
+// Tüm sayfaları listele
+router.get('/', auth, async (req, res) => {
+    try {
+        const pages = await Page.find();
+        res.json({ success: true, pages });
+    } catch (error) {
+        console.error('Sayfaları listeleme hatası:', error);
+        res.status(500).json({ success: false, message: 'Sayfalar listelenirken bir hata oluştu' });
+    }
+});
+
+// Yeni sayfa oluştur
+router.post('/', auth, upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'videos', maxCount: 10 }
+]), async (req, res) => {
+    try {
+        const { name } = req.body;
+        
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Sayfa adı gereklidir.' });
+        }
+
+        // Yüklenen dosyaları ekle
+        const images = [
+            ...(req.files?.images || []).map(file => ({
+                type: 'image',
+                filename: file.filename,
+                originalname: file.originalname,
+                url: "/uploads/pages/" + file.filename,
+                index: 0
+            }))
+        ];
+
+        const videos = [
+            ...(req.files?.videos || []).map(file => ({
+                type: 'video',
+                filename: file.filename,
+                originalname: file.originalname,
+                url: "/uploads/pages/" + file.filename,
+                index: 0
+            }))
+        ];
+
+        const page = new Page({
+            name: name.trim(),
+            media: [...images, ...videos]
+        });
+
+        await page.save();
+
+        // HTML dosyasını oluştur
+        const htmlFileName = page.name.toLowerCase().replace(/\s+/g, '') + '.html';
+        const htmlContent = createHtmlTemplate(page);
+        const htmlPath = path.join(__dirname, '..', '..', htmlFileName);
+        
+        fs.writeFileSync(htmlPath, htmlContent);
+
+        res.status(201).json({ 
+            success: true, 
+            page: {
+                ...page.toObject(),
+                htmlPath: htmlFileName
+            }
+        });
+    } catch (error) {
+        console.error('Sayfa oluşturulurken hata:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Sayfa güncelle
+router.put('/:id', auth, upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'videos', maxCount: 10 }
+]), async (req, res) => {
+    try {
+        // Debug logları
+        console.log('=== GÜNCELLEME İSTEĞİ BAŞLADI ===');
+        console.log('ID:', req.params.id);
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+        console.log('Files:', req.files ? Object.keys(req.files) : 'Dosya yok');
+
+        const page = await Page.findById(req.params.id);
+        if (!page) {
+            console.log('Sayfa bulunamadı:', req.params.id);
+            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
+        }
+        console.log('Mevcut sayfa bulundu:', page.name);
+
+        // Sayfa adını güncelle
+        if (req.body.name) {
+            page.name = req.body.name;
+            console.log('Sayfa adı güncellendi:', page.name);
+        }
+
+        // Mevcut medyaları koru
+        const currentMedia = [...page.media];
+        console.log('Mevcut medyalar:', {
+            media: currentMedia.length
+        });
+
+        // Arrays'leri temizle
+        page.media = [];
+
+        // Mevcut medyaları geri ekle
+        page.media.push(...currentMedia);
+        console.log('Mevcut medyalar geri eklendi');
+
+        // Yüklenen yeni resimleri ekle
+        if (req.files && req.files.images) {
+            console.log('Yeni resim dosyaları:', req.files.images.length);
+            req.files.images.forEach(file => {
+                page.media.push({
+                    type: 'image',
+                    filename: file.filename,
+                    originalname: file.originalname,
+                    url: "/uploads/pages/" + file.filename,
+                    index: page.media.length
+                });
+            });
+        }
+
+        // Yüklenen yeni videoları ekle
+        if (req.files && req.files.videos) {
+            console.log('Yeni video dosyaları:', req.files.videos.length);
+            req.files.videos.forEach(file => {
+                page.media.push({
+                    type: 'video',
+                    filename: file.filename,
+                    originalname: file.originalname,
+                    url: "/uploads/pages/" + file.filename,
+                    index: page.media.length
+                });
+            });
+        }
+
+        console.log('Güncellenecek sayfa durumu:', {
+            name: page.name,
+            media: page.media.length
+        });
+
+        // HTML dosyasını güncelle
+        try {
+            console.log('HTML dosyası güncelleniyor...');
+            const htmlContent = createHtmlTemplate(page);
+            const htmlPath = path.join(__dirname, '..', '..', page.name.toLowerCase().replace(/\s+/g, '') + '.html');
+            fs.writeFileSync(htmlPath, htmlContent);
+            console.log('HTML dosyası güncellendi:', htmlPath);
+        } catch (error) {
+            console.error('HTML dosyası oluşturma hatası:', error);
+            throw error;
+        }
+
+        // Sayfayı kaydet
+        try {
+            console.log('Sayfa veritabanına kaydediliyor...');
+            await page.save();
+            console.log('Sayfa başarıyla kaydedildi');
+            res.json({ success: true, message: 'Sayfa başarıyla güncellendi', page });
+        } catch (error) {
+            console.error('Sayfa kaydetme hatası:', error);
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('=== GÜNCELLEME HATASI ===');
+        console.error(error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Sayfa güncellenirken bir hata oluştu', 
+            error: error.message,
+            stack: error.stack 
+        });
+    }
+});
+
+// Medya ekle
+router.post('/:pageId/media', auth, upload.single('file'), async (req, res) => {
+    try {
+        const { pageId } = req.params;
+        const { type, url } = req.body;
+        
+        console.log('Medya ekleme isteği:', { pageId, type, hasFile: !!req.file, hasUrl: !!url });
+        
+        if (!type || (type !== 'image' && type !== 'video')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Geçersiz medya tipi. "image" veya "video" olmalıdır.' 
+            });
+        }
+        
+        // Sayfayı bul
+        const page = await Page.findById(pageId);
+        if (!page) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Sayfa bulunamadı' 
+            });
+        }
+        
+        // Yeni medya öğesi
+        let newMedia = {
+            type: type,
+            index: page.media ? page.media.length : 0
+        };
+        
+        // Dosya yükleme
+        if (req.file) {
+            const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'pages');
+            const relativePath = path.relative(path.join(__dirname, '..', '..'), path.join(uploadDir, req.file.filename));
+            const fileUrl = '/' + relativePath.replace(/\\/g, '/');
+            
+            newMedia.url = fileUrl;
+            newMedia.filename = req.file.filename;
+            newMedia.originalname = req.file.originalname;
+            
+            console.log('Dosya yüklendi:', { 
+                filename: req.file.filename, 
+                url: fileUrl 
+            });
+        } 
+        // URL ekleme
+        else if (url) {
+            newMedia.url = url;
+            console.log('URL eklendi:', { url });
+        } 
+        else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Dosya veya URL gerekli' 
+            });
+        }
+        
+        // Medya öğesini sayfaya ekle
+        if (!page.media) {
+            page.media = [];
+        }
+        
+        page.media.push(newMedia);
+        await page.save();
+        
+        console.log('Medya eklendi:', {
+            pageId: page._id,
+            mediaCount: page.media.length,
+            newMedia
+        });
+        
+        res.json({ 
+            success: true, 
+            message: 'Medya başarıyla eklendi',
+            media: newMedia
+        });
+    } catch (error) {
+        console.error('Medya ekleme hatası:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Medya eklenirken bir hata oluştu: ' + error.message 
+        });
+    }
+});
+
+// Medya sil
+router.delete('/:pageId/media', auth, async (req, res) => {
+    try {
+        const { pageId } = req.params;
+        const { mediaId } = req.body;
+        
+        console.log('Medya silme isteği:', { pageId, mediaId });
+        
+        if (!mediaId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Medya ID gerekli' 
+            });
+        }
+        
+        // Sayfayı bul
+        const page = await Page.findById(pageId);
+        if (!page) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Sayfa bulunamadı' 
+            });
+        }
+        
+        // Medya öğesini bul
+        if (!page.media) {
+            page.media = [];
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Bu sayfada medya bulunamadı' 
+            });
+        }
+        
+        // Medya öğesinin index'ini bul
+        const mediaIndex = page.media.findIndex(item => item._id.toString() === mediaId);
+        
+        if (mediaIndex === -1) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Medya bulunamadı' 
+            });
+        }
+        
+        // Dosya sisteminden silme işlemi (eğer dosya varsa)
+        const mediaItem = page.media[mediaIndex];
+        if (mediaItem.filename) {
+            try {
+                const filePath = path.join(__dirname, '..', '..', 'uploads', 'pages', mediaItem.filename);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log('Dosya silindi:', filePath);
+                }
+            } catch (fileError) {
+                console.error('Dosya silme hatası:', fileError);
+                // Dosya silme hatası olsa bile devam et
+            }
+        }
+        
+        // Medya öğesini diziden çıkar
+        page.media.splice(mediaIndex, 1);
+        
+        // Kalan medya öğelerinin index'lerini güncelle
+        page.media.forEach((item, index) => {
+            item.index = index;
+        });
+        
+        await page.save();
+        
+        console.log('Medya silindi:', {
+            pageId: page._id,
+            mediaCount: page.media.length
+        });
+        
+        res.json({ 
+            success: true, 
+            message: 'Medya başarıyla silindi'
+        });
+    } catch (error) {
+        console.error('Medya silme hatası:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Medya silinirken bir hata oluştu: ' + error.message 
+        });
+    }
+});
+
+// Medya sıralama
+router.put('/:pageId/media/reorder', auth, async (req, res) => {
+    try {
+        const { pageId } = req.params;
+        const { order } = req.body;
+        
+        console.log('Medya sıralama isteği:', { pageId, order });
+        
+        if (!order || !Array.isArray(order)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Geçersiz sıralama verisi. Dizi bekleniyor.' 
+            });
+        }
+        
+        // Sayfayı bul
+        const page = await Page.findById(pageId);
+        if (!page) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Sayfa bulunamadı' 
+            });
+        }
+        
+        console.log('Sayfa bulundu:', {
+            id: page._id,
+            name: page.name,
+            mediaCount: page.media.length
+        });
+        
+        // Mevcut medya öğelerini al
+        if (!page.media || page.media.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Sayfada medya bulunamadı'
+            });
+        }
+        
+        // Medya öğelerini ID'lerine göre eşleştir ve yeni sıralamayı uygula
+        const mediaMap = {};
+        page.media.forEach(item => {
+            mediaMap[item._id.toString()] = item;
+        });
+        
+        const newMedia = [];
+        
+        // Yeni sıralamaya göre medyaları düzenle
+        for (const item of order) {
+            if (!item.id) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Geçersiz sıralama öğesi. Her öğe için id gerekli.' 
+                });
+            }
+            
+            const mediaItem = mediaMap[item.id];
+            if (mediaItem) {
+                newMedia.push(mediaItem);
+            }
+        }
+        
+        // Eksik medya öğelerini de ekle (sıralamada olmayan ama veritabanında olan)
+        page.media.forEach(item => {
+            const exists = newMedia.some(m => m._id.toString() === item._id.toString());
+            if (!exists) {
+                newMedia.push(item);
+            }
+        });
+        
+        // Sayfayı güncelle
+        page.media = newMedia;
+        await page.save();
+        
+        console.log('Medya sıralaması güncellendi');
+        
+        res.json({ 
+            success: true, 
+            message: 'Medya sıralaması başarıyla güncellendi',
+            mediaCount: newMedia.length
+        });
+    } catch (error) {
+        console.error('Medya sıralama hatası:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Medya sıralaması güncellenirken bir hata oluştu' 
+        });
+    }
+});
+
+// Sayfa sil
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const page = await Page.findById(req.params.id);
+        if (!page) {
+            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
+        }
+        
+        // HTML dosyasını sil
+        const htmlFileName = page.name.toLowerCase().replace(/\s+/g, '') + '.html';
+        const htmlPath = path.join(__dirname, '..', '..', htmlFileName);
+        if (fs.existsSync(htmlPath)) {
+            fs.unlinkSync(htmlPath);
+        }
+        
+        // Local resimleri sil
+        page.media.forEach(media => {
+            if (media.filename) {
+                const filePath = path.join('uploads/pages', media.filename);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            }
+        });
+
+        // Sayfayı sil
+        await page.deleteOne();
+        
+        res.json({ success: true, message: 'Sayfa başarıyla silindi' });
+    } catch (error) {
+        console.error('Sayfa silinirken hata:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+module.exports = router;
