@@ -320,17 +320,31 @@ function updateMediaList(images = [], videos = []) {
     // API URL'sini belirle
     const apiBaseUrl = API_URL.replace('/api', '');
     
+    // Medya tipine göre ayrı sayaçlar
+    let imageCount = 0;
+    let videoCount = 0;
+    
     allMedia.forEach((media, index) => {
         if (!media) {
             console.error(`Geçersiz medya öğesi (index: ${index}):`, media);
             return;
         }
         
+        // Medya tipine göre gerçek index hesapla
+        let realIndex;
+        if (media.type === 'image') {
+            realIndex = imageCount;
+            imageCount++;
+        } else {
+            realIndex = videoCount;
+            videoCount++;
+        }
+        
         const mediaItem = document.createElement('div');
         mediaItem.className = 'media-item';
-        mediaItem.dataset.id = index; // SQLite'da index kullan
+        mediaItem.dataset.id = realIndex; // Gerçek index kullan
         mediaItem.dataset.type = media.type;
-        mediaItem.dataset.order = index; // Sıralama için index ekle
+        mediaItem.dataset.order = index; // Sıralama için global index
         
         let mediaContent = '';
         let mediaUrl = '';
@@ -469,7 +483,7 @@ function updateMediaList(images = [], videos = []) {
         if (deleteButton) {
             deleteButton.addEventListener('click', () => {
                 if (confirm(`Bu ${media.type === 'image' ? 'resmi' : 'videoyu'} silmek istediğinize emin misiniz?`)) {
-                    deleteMedia(index, media.type);
+                    deleteMedia(realIndex, media.type);
                 }
             });
         }
