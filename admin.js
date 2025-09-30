@@ -190,27 +190,20 @@ async function loadPages() {
                     .replace(/^-|-$/g, '');
                 
                 // HTML sayfasını yeni sekmede aç
-                const backendUrl = window.location.hostname.includes('localhost') 
                     ? `http://localhost:10000`
                     : `https://aruiktisat.onrender.com`;
                 window.open(`${backendUrl}/${safeFileName}.html`, '_blank');
             });
             
-            // Silme butonuna tıklama olayı
-            const deleteButton = pageElement.querySelector('.delete-page');
-            deleteButton.addEventListener('click', () => {
-                if (confirm(`"${page.name || 'İsimsiz Sayfa'}" sayfasını silmek istediğinize emin misiniz?`)) {
-                    deletePage(page.id);
+            // Sayfa silme butonu bulundu, click event listener ekleniyor
+        const deletePageBtn = document.getElementById('deletePageBtn');
+        if (deletePageBtn) {
+            deletePageBtn.addEventListener('click', () => {
+                if (currentEditingPageId && confirm('Bu sayfayı silmek istediğinize emin misiniz?')) {
+                    deletePage(currentEditingPageId);
                 }
             });
-            
-            pagesList.appendChild(pageElement);
-            console.log(`Sayfa ${index + 1} listeye eklendi`);
-        });
-        
-        console.log('Tüm sayfalar listeye eklendi');
-        
-    } catch (error) {
+            console.log('Sayfa silme butonu bulundu, click event listener ekleniyor');
         console.error('Sayfaları yükleme hatası:', error);
         showAlert('danger', 'Sayfalar yüklenirken bir hata oluştu: ' + error.message);
     }
@@ -1060,10 +1053,152 @@ function setupEventListeners() {
         console.warn('Sayfa silme butonu bulunamadı!');
     }
     
+    // Yeni medya ekleme butonları
+    const addImageBtn = document.getElementById('addImageBtn');
+    const addVideoBtn = document.getElementById('addVideoBtn');
+    const uploadImageBtn = document.getElementById('uploadImageBtn');
+    const uploadVideoBtn = document.getElementById('uploadVideoBtn');
+    const cancelImageBtn = document.getElementById('cancelImageBtn');
+    const cancelVideoBtn = document.getElementById('cancelVideoBtn');
+
+    if (addImageBtn) {
+        addImageBtn.addEventListener('click', () => showNewMediaSection('image'));
+    }
+    if (addVideoBtn) {
+        addVideoBtn.addEventListener('click', () => showNewMediaSection('video'));
+    }
+    if (uploadImageBtn) {
+        uploadImageBtn.addEventListener('click', () => uploadNewMedia('image'));
+    }
+    if (uploadVideoBtn) {
+        uploadVideoBtn.addEventListener('click', () => uploadNewMedia('video'));
+    }
+    if (cancelImageBtn) {
+        cancelImageBtn.addEventListener('click', () => hideNewMediaSection());
+    }
+    if (cancelVideoBtn) {
+        cancelVideoBtn.addEventListener('click', () => hideNewMediaSection());
+    }
+
     // Sortable'ı başlat
     initSortable();
     
     console.log('Tüm event listener\'lar eklendi');
+}
+
+// Yeni medya ekleme fonksiyonları
+function showNewMediaSection(type) {
+    const newMediaSection = document.getElementById('newMediaSection');
+    const newImageSection = document.getElementById('newImageSection');
+    const newVideoSection = document.getElementById('newVideoSection');
+    
+    // Tüm bölümleri gizle
+    newImageSection.style.display = 'none';
+    newVideoSection.style.display = 'none';
+    
+    // İlgili bölümü göster
+    if (type === 'image') {
+        newImageSection.style.display = 'block';
+    } else if (type === 'video') {
+        newVideoSection.style.display = 'block';
+    }
+    
+    newMediaSection.style.display = 'block';
+}
+
+function hideNewMediaSection() {
+    const newMediaSection = document.getElementById('newMediaSection');
+    newMediaSection.style.display = 'none';
+    
+    // Input'ları temizle
+    document.getElementById('newImageFile').value = '';
+    document.getElementById('newVideoFile').value = '';
+    document.getElementById('newVideoUrl').value = '';
+}
+
+async function uploadNewMedia(type) {
+    try {
+        const pageId = document.getElementById('pageId').value;
+        if (!pageId) {
+            showAlert('danger', 'Sayfa ID bulunamadı');
+            return;
+        }
+
+        const formData = new FormData();
+        
+        if (type === 'image') {
+            const fileInput = document.getElementById('newImageFile');
+            if (!fileInput.files[0]) {
+                showAlert('danger', 'Lütfen bir resim dosyası seçin');
+                return;
+            }
+            formData.append('image', fileInput.files[0]);
+            
+            const response = await fetch(`${API_URL}/pages/${pageId}/images`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                showAlert('success', 'Resim başarıyla eklendi');
+                hideNewMediaSection();
+                await loadPage(pageId);
+            } else {
+                throw new Error('Resim yüklenirken hata oluştu');
+            }
+        } else if (type === 'video') {
+            const fileInput = document.getElementById('newVideoFile');
+            const urlInput = document.getElementById('newVideoUrl');
+            
+            if (fileInput.files[0]) {
+                // Dosya yükleme
+                formData.append('video', fileInput.files[0]);
+                
+                const response = await fetch(`${API_URL}/pages/${pageId}/videos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showAlert('success', 'Video başarıyla eklendi');
+                    hideNewMediaSection();
+                    await loadPage(pageId);
+                } else {
+                    throw new Error('Video yüklenirken hata oluştu');
+                }
+            } else if (urlInput.value.trim()) {
+                // URL ekleme
+                const response = await fetch(`${API_URL}/pages/${pageId}/videos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: urlInput.value.trim() })
+                });
+                
+                if (response.ok) {
+                    showAlert('success', 'Video başarıyla eklendi');
+                    hideNewMediaSection();
+                    await loadPage(pageId);
+                } else {
+                    throw new Error('Video eklenirken hata oluştu');
+                }
+            } else {
+                showAlert('danger', 'Lütfen bir video dosyası seçin veya URL girin');
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Medya yükleme hatası:', error);
+        showAlert('danger', 'Medya yüklenirken hata oluştu: ' + error.message);
+    }
 }
 
 // Kimlik doğrulama kontrolü
