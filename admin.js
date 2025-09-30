@@ -1060,31 +1060,6 @@ function setupEventListeners() {
         console.warn('Sayfa silme butonu bulunamadı!');
     }
     
-    // Resim ekleme butonu
-    const addImageBtn = document.getElementById('addImageBtn');
-    if (addImageBtn) {
-        addImageBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Basit file input oluştur
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.style.display = 'none';
-            
-            fileInput.onchange = async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    await uploadNewImage(file);
-                }
-            };
-            
-            document.body.appendChild(fileInput);
-            fileInput.click();
-            document.body.removeChild(fileInput);
-        });
-    }
 
     // Sortable'ı başlat
     initSortable();
@@ -1092,41 +1067,6 @@ function setupEventListeners() {
     console.log('Tüm event listener\'lar eklendi');
 }
 
-// Yeni resim yükleme fonksiyonu
-async function uploadNewImage(file) {
-    try {
-        const pageId = document.getElementById('pageId').value;
-        if (!pageId) {
-            showAlert('danger', 'Sayfa ID bulunamadı');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        const response = await fetch(`${API_URL}/pages/${pageId}/images`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formData
-        });
-        
-        if (response.ok) {
-            showAlert('success', 'Resim başarıyla eklendi');
-            
-            // 1 saniye bekle sonra sayfayı yenile (cache bypass)
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 1000);
-        } else {
-            throw new Error('Resim yüklenirken hata oluştu');
-        }
-    } catch (error) {
-        console.error('Resim yükleme hatası:', error);
-        showAlert('danger', 'Resim yüklenirken hata oluştu: ' + error.message);
-    }
-}
 
 // Yeni medya ekleme fonksiyonları
 function showNewMediaSection(type) {
