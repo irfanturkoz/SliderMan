@@ -328,7 +328,7 @@ function updateMediaList(images = [], videos = []) {
         
         const mediaItem = document.createElement('div');
         mediaItem.className = 'media-item';
-        mediaItem.dataset.id = media.id || media._id;
+        mediaItem.dataset.id = index; // SQLite'da index kullan
         mediaItem.dataset.type = media.type;
         mediaItem.dataset.order = index; // Sıralama için index ekle
         
@@ -469,7 +469,7 @@ function updateMediaList(images = [], videos = []) {
         if (deleteButton) {
             deleteButton.addEventListener('click', () => {
                 if (confirm(`Bu ${media.type === 'image' ? 'resmi' : 'videoyu'} silmek istediğinize emin misiniz?`)) {
-                    deleteMedia(media.id || media._id, media.type);
+                    deleteMedia(index, media.type);
                 }
             });
         }

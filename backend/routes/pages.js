@@ -555,9 +555,9 @@ router.delete('/:pageId/images/:imageId', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
         }
         
-        // Resmi bul ve sil
-        const imageIndex = page.images.findIndex(img => img._id.toString() === imageId);
-        if (imageIndex === -1) {
+        // SQLite'da medya öğeleri JSON array - index ile sil
+        const imageIndex = parseInt(imageId);
+        if (imageIndex < 0 || imageIndex >= page.images.length) {
             return res.status(404).json({ success: false, message: 'Resim bulunamadı' });
         }
         
@@ -607,9 +607,9 @@ router.delete('/:pageId/videos/:videoId', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
         }
         
-        // Videoyu bul ve sil
-        const videoIndex = page.videos.findIndex(vid => vid._id.toString() === videoId);
-        if (videoIndex === -1) {
+        // SQLite'da medya öğeleri JSON array - index ile sil
+        const videoIndex = parseInt(videoId);
+        if (videoIndex < 0 || videoIndex >= page.videos.length) {
             return res.status(404).json({ success: false, message: 'Video bulunamadı' });
         }
         
