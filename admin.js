@@ -1164,8 +1164,8 @@ async function uploadNewMedia(type) {
             if (response.ok) {
                 showAlert('success', 'Resim başarıyla eklendi');
                 hideNewMediaSection();
-                await loadPage(pageId);
-                await loadPages(); // Sayfa listesini de yenile
+                // Sayfayı yenile ve medya listesini güncelle
+                location.reload();
             } else {
                 throw new Error('Resim yüklenirken hata oluştu');
             }
@@ -1188,8 +1188,8 @@ async function uploadNewMedia(type) {
                 if (response.ok) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
-                    await loadPage(pageId);
-                    await loadPages(); // Sayfa listesini de yenile
+                    // Sayfayı yenile ve medya listesini güncelle
+                    location.reload();
                 } else {
                     throw new Error('Video yüklenirken hata oluştu');
                 }
@@ -1207,8 +1207,8 @@ async function uploadNewMedia(type) {
                 if (response.ok) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
-                    await loadPage(pageId);
-                    await loadPages(); // Sayfa listesini de yenile
+                    // Sayfayı yenile ve medya listesini güncelle
+                    location.reload();
                 } else {
                     throw new Error('Video eklenirken hata oluştu');
                 }
