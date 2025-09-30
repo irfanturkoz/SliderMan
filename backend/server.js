@@ -35,6 +35,11 @@ connectDB();
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/pages', require('./routes/pages'));
 
+// Kök yolu için login sayfasına yönlendirme (önce bu olmalı)
+app.get('/', (req, res) => {
+    res.redirect('/login.html');
+});
+
 // HTML dosyalarını serve et
 app.get('*.html', (req, res) => {
     // URL'den dosya adını al
@@ -67,10 +72,7 @@ app.get('*.html', (req, res) => {
     }
 });
 
-// Kök yolu için login sayfasına yönlendirme
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
-});
+// Duplicate route kaldırıldı - yukarıda zaten var
 
 // Tüm diğer HTML istekleri için
 app.get('/:pageName', (req, res) => {
