@@ -1170,10 +1170,8 @@ async function uploadNewMedia(type) {
             if (response.ok) {
                 showAlert('success', 'Resim başarıyla eklendi');
                 hideNewMediaSection();
-                // Medya listesini hemen güncelle
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
+                // Hemen sayfayı yenile
+                window.location.href = window.location.href;
             } else {
                 throw new Error('Resim yüklenirken hata oluştu');
             }

@@ -299,8 +299,8 @@ router.post('/', auth, upload.fields([
 
         const page = await Page.create({
             name: name.trim(),
-            images: images,
-            videos: videos
+            images: images.length > 0 ? images : [],
+            videos: videos.length > 0 ? videos : []
         });
 
         // Güvenli dosya adı oluştur
@@ -793,79 +793,5 @@ router.post('/:id/videos', auth, async (req, res) => {
 
 // updateMediaOrderValues fonksiyonu kaldırıldı - SQLite'da gerek yok
 
-// Yeni resim ekleme endpoint'i
-router.post('/:pageId/images', auth, upload.single('image'), async (req, res) => {
-    try {
-        const { pageId } = req.params;
-        const page = await Page.findByPk(pageId);
-        
-        if (!page) {
-            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
-        }
-        
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Resim dosyası gerekli' });
-        }
-        
-        // Yeni resim ekle
-        const newImage = {
-            type: 'file',
-            filename: req.file.filename,
-            originalname: req.file.originalname,
-            url: `https://aruiktisat.onrender.com/uploads/pages/${req.file.filename}`,
-            index: page.images.length
-        };
-        
-        const updatedImages = [...page.images, newImage];
-        await page.update({ images: updatedImages });
-        
-        res.json({ success: true, message: 'Resim başarıyla eklendi', image: newImage });
-    } catch (error) {
-        console.error('Resim ekleme hatası:', error);
-        res.status(500).json({ success: false, message: 'Resim eklenirken hata oluştu' });
-    }
-});
-
-// Yeni video ekleme endpoint'i  
-router.post('/:pageId/videos', auth, upload.single('video'), async (req, res) => {
-    try {
-        const { pageId } = req.params;
-        const page = await Page.findByPk(pageId);
-        
-        if (!page) {
-            return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
-        }
-        
-        let newVideo;
-        
-        if (req.file) {
-            // Dosya yükleme
-            newVideo = {
-                type: 'file',
-                filename: req.file.filename,
-                originalname: req.file.originalname,
-                url: `https://aruiktisat.onrender.com/uploads/pages/${req.file.filename}`,
-                index: page.videos.length
-            };
-        } else if (req.body.url) {
-            // URL ekleme
-            newVideo = {
-                type: 'url',
-                url: req.body.url,
-                index: page.videos.length
-            };
-        } else {
-            return res.status(400).json({ success: false, message: 'Video dosyası veya URL gerekli' });
-        }
-        
-        const updatedVideos = [...page.videos, newVideo];
-        await page.update({ videos: updatedVideos });
-        
-        res.json({ success: true, message: 'Video başarıyla eklendi', video: newVideo });
-    } catch (error) {
-        console.error('Video ekleme hatası:', error);
-        res.status(500).json({ success: false, message: 'Video eklenirken hata oluştu' });
-    }
-});
 
 module.exports = router;
