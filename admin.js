@@ -701,13 +701,16 @@ async function deleteMedia(mediaId, mediaType) {
     try {
         console.log(`Medya siliniyor: ID=${mediaId}, Tip=${mediaType}`);
         
-        if (!currentEditingPageId) {
+        // Sayfa ID'sini form'dan al
+        const pageId = document.getElementById('pageId').value || currentEditingPageId;
+        
+        if (!pageId) {
             console.error('Düzenlenen sayfa ID\'si bulunamadı!');
             throw new Error('Düzenlenen sayfa bulunamadı');
         }
         
         const endpoint = mediaType === 'image' ? 'images' : 'videos';
-        const url = `${API_URL}/pages/${currentEditingPageId}/${endpoint}/${mediaId}`;
+        const url = `${API_URL}/pages/${pageId}/${endpoint}/${mediaId}`;
         
         console.log('Silme isteği URL:', url);
         
@@ -728,7 +731,7 @@ async function deleteMedia(mediaId, mediaType) {
         console.log('Medya silindi:', result);
         
         // Sayfa detaylarını yeniden yükle
-        await loadPage(currentEditingPageId);
+        await loadPage(pageId);
         
         showAlert('success', `${mediaType === 'image' ? 'Resim' : 'Video'} başarıyla silindi`);
     } catch (error) {
