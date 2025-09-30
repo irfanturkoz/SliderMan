@@ -190,6 +190,7 @@ async function loadPages() {
                     .replace(/^-|-$/g, '');
                 
                 // HTML sayfasını yeni sekmede aç
+                const backendUrl = window.location.hostname.includes('localhost') 
                     ? `http://localhost:10000`
                     : `https://aruiktisat.onrender.com`;
                 window.open(`${backendUrl}/${safeFileName}.html`, '_blank');
