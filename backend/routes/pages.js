@@ -80,7 +80,7 @@ function createHtmlTemplate(page) {
             if (media.type === 'image') {
                 const image = media.data;
                 const imageUrl = process.env.NODE_ENV === 'production' 
-                    ? `https://sliderman-backend.onrender.com/uploads/pages/${image.filename}`
+                    ? `https://aruiktisat.onrender.com/uploads/pages/${image.filename}`
                     : `/uploads/pages/${image.filename}`;
                 
                 mediaItems += `
@@ -90,7 +90,7 @@ function createHtmlTemplate(page) {
             } else if (media.type === 'video') {
                 const video = media.data;
                 const videoUrl = process.env.NODE_ENV === 'production'
-                    ? `https://sliderman-backend.onrender.com/uploads/pages/${video.filename}`
+                    ? `https://aruiktisat.onrender.com/uploads/pages/${video.filename}`
                     : `/uploads/pages/${video.filename}`;
                 
                 mediaItems += `
@@ -178,7 +178,7 @@ router.get('/:id', auth, async (req, res) => {
         
         // API URL'sini belirle
         const baseUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://sliderman-backend.onrender.com' 
+            ? 'https://aruiktisat.onrender.com' 
             : 'http://localhost:10000';
         
         // Resimlerin URL'lerini düzelt
@@ -215,7 +215,7 @@ router.get('/', auth, async (req, res) => {
         
         // API URL'sini belirle
         const baseUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://sliderman-backend.onrender.com' 
+            ? 'https://aruiktisat.onrender.com' 
             : 'http://localhost:10000';
         
         // Sayfaları düzelt
@@ -266,7 +266,7 @@ router.post('/', auth, upload.fields([
 
         // API URL'sini belirle
         const baseUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://sliderman-backend.onrender.com' 
+            ? 'https://aruiktisat.onrender.com' 
             : 'http://localhost:10000';
 
         // Yüklenen dosyaları ekle
@@ -352,7 +352,7 @@ router.post('/', auth, upload.fields([
 
         // HTML URL'sini oluştur (her iki ortam için de backend URL'sini kullan)
         const htmlUrl = process.env.NODE_ENV === 'production'
-            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
+            ? `https://aruiktisat.onrender.com/${safeFileName}.html`
             : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
         
         console.log(`HTML URL'si oluşturuldu: ${htmlUrl}`);
@@ -395,7 +395,7 @@ router.put('/:id', auth, upload.fields([
 
         // API URL'sini belirle
         const baseUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://sliderman-backend.onrender.com' 
+            ? 'https://aruiktisat.onrender.com' 
             : 'http://localhost:10000';
 
         // Yüklenen yeni dosyaları ekle
@@ -474,7 +474,7 @@ router.put('/:id', auth, upload.fields([
 
         // HTML URL'sini oluştur (her iki ortam için de backend URL'sini kullan)
         const htmlUrl = process.env.NODE_ENV === 'production'
-            ? `https://sliderman-backend.onrender.com/${safeFileName}.html`
+            ? `https://aruiktisat.onrender.com/${safeFileName}.html`
             : `http://localhost:${process.env.PORT || 10000}/${safeFileName}.html`;
         
         console.log(`HTML URL'si oluşturuldu: ${htmlUrl}`);
@@ -713,7 +713,7 @@ router.post('/:id/images', auth, upload.single('image'), async (req, res) => {
         // Resim bilgilerini ekle
         const imageData = {
             type: 'local',
-            url: `https://sliderman-backend.onrender.com/uploads/pages/${req.file.filename}`,
+            url: `https://aruiktisat.onrender.com/uploads/pages/${req.file.filename}`,
             filename: req.file.filename,
             originalname: req.file.originalname,
             order: newOrder
