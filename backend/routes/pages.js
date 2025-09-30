@@ -661,8 +661,38 @@ router.post('/update-media-order', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
         }
 
-        // SQLite'da medya sıralama basitleştirildi - şimdilik sıralama desteği yok
-        console.log('Medya sıralama isteği alındı ama SQLite da henüz desteklenmiyor');
+        // SQLite için medya sıralama sistemi
+        if (mixedOrder && mixedOrder.length > 0) {
+            // Yeni sıralı medya dizileri oluştur
+            const newImages = [];
+            const newVideos = [];
+            
+            mixedOrder.forEach((item, index) => {
+                if (item.type === 'image') {
+                    // Index ile resmi bul
+                    const imageIndex = parseInt(item.id);
+                    if (imageIndex >= 0 && imageIndex < page.images.length) {
+                        const image = page.images[imageIndex];
+                        image.order = index;
+                        newImages.push(image);
+                    }
+                } else if (item.type === 'video') {
+                    // Index ile videoyu bul
+                    const videoIndex = parseInt(item.id);
+                    if (videoIndex >= 0 && videoIndex < page.videos.length) {
+                        const video = page.videos[videoIndex];
+                        video.order = index;
+                        newVideos.push(video);
+                    }
+                }
+            });
+            
+            // Sayfayı yeni sıralı dizilerle güncelle
+            await page.update({ 
+                images: newImages.length > 0 ? newImages : page.images,
+                videos: newVideos.length > 0 ? newVideos : page.videos
+            });
+        }
 
         // HTML sayfasını güncelle
         const safeFileName = createSafeFileName(page.name);
