@@ -1153,6 +1153,7 @@ async function uploadNewMedia(type) {
                 showAlert('success', 'Resim başarıyla eklendi');
                 hideNewMediaSection();
                 await loadPage(pageId);
+                await loadPages(); // Sayfa listesini de yenile
             } else {
                 throw new Error('Resim yüklenirken hata oluştu');
             }
@@ -1176,6 +1177,7 @@ async function uploadNewMedia(type) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
                     await loadPage(pageId);
+                    await loadPages(); // Sayfa listesini de yenile
                 } else {
                     throw new Error('Video yüklenirken hata oluştu');
                 }
@@ -1194,6 +1196,7 @@ async function uploadNewMedia(type) {
                     showAlert('success', 'Video başarıyla eklendi');
                     hideNewMediaSection();
                     await loadPage(pageId);
+                    await loadPages(); // Sayfa listesini de yenile
                 } else {
                     throw new Error('Video eklenirken hata oluştu');
                 }
