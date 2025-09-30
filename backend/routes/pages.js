@@ -383,7 +383,7 @@ router.put('/:id', auth, upload.fields([
             return res.status(400).json({ success: false, message: 'Geçersiz sayfa ID' });
         }
 
-        const page = await Page.findById(id);
+        const page = await Page.findByPk(id);
         if (!page) {
             return res.status(404).json({ success: false, message: 'Sayfa bulunamadı' });
         }
