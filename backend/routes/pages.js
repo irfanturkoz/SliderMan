@@ -564,6 +564,9 @@ router.delete('/:pageId/images/:imageId', auth, async (req, res) => {
         // Resmi diziden çıkar
         const removedImage = page.images.splice(imageIndex, 1)[0];
         
+        // Sequelize'a JSON field'ının değiştiğini bildir
+        page.changed('images', true);
+        
         // Dosya sisteminden de sil (eğer dosya varsa)
         if (removedImage.filename) {
             const filePath = path.join(__dirname, '..', '..', 'uploads', 'pages', removedImage.filename);
@@ -615,6 +618,9 @@ router.delete('/:pageId/videos/:videoId', auth, async (req, res) => {
         
         // Videoyu diziden çıkar
         const removedVideo = page.videos.splice(videoIndex, 1)[0];
+        
+        // Sequelize'a JSON field'ının değiştiğini bildir
+        page.changed('videos', true);
         
         // Dosya sisteminden de sil (eğer dosya varsa)
         if (removedVideo.filename) {
