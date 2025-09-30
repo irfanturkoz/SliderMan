@@ -1060,47 +1060,6 @@ function setupEventListeners() {
         console.warn('Sayfa silme butonu bulunamadı!');
     }
     
-    // Yeni medya ekleme butonları
-    const addImageBtn = document.getElementById('addImageBtn');
-    const addVideoBtn = document.getElementById('addVideoBtn');
-    const uploadImageBtn = document.getElementById('uploadImageBtn');
-    const uploadVideoBtn = document.getElementById('uploadVideoBtn');
-    const cancelImageBtn = document.getElementById('cancelImageBtn');
-    const cancelVideoBtn = document.getElementById('cancelVideoBtn');
-
-    if (addImageBtn) {
-        addImageBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            showNewMediaSection('image');
-        });
-    }
-    if (addVideoBtn) {
-        addVideoBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            showNewMediaSection('video');
-        });
-    }
-    if (uploadImageBtn) {
-        uploadImageBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            uploadNewMedia('image');
-        });
-    }
-    if (uploadVideoBtn) {
-        uploadVideoBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            uploadNewMedia('video');
-        });
-    }
-    if (cancelImageBtn) {
-        cancelImageBtn.addEventListener('click', () => hideNewMediaSection());
-    }
-    if (cancelVideoBtn) {
-        cancelVideoBtn.addEventListener('click', () => hideNewMediaSection());
-    }
-
     // Resim ekleme butonu
     const addImageBtn = document.getElementById('addImageBtn');
     if (addImageBtn) {
