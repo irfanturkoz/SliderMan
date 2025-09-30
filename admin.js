@@ -1069,7 +1069,13 @@ function setupEventListeners() {
     const cancelVideoBtn = document.getElementById('cancelVideoBtn');
 
     if (addImageBtn) {
-        addImageBtn.addEventListener('click', () => showNewMediaSection('image'));
+        addImageBtn.addEventListener('click', () => {
+            console.log('Resim Ekle butonuna tıklandı');
+            showNewMediaSection('image');
+        });
+        console.log('Resim Ekle butonu event listener eklendi');
+    } else {
+        console.error('addImageBtn bulunamadı!');
     }
     if (addVideoBtn) {
         addVideoBtn.addEventListener('click', () => showNewMediaSection('video'));
